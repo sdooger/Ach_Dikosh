@@ -1,7 +1,7 @@
 // Rule-based matching of CV text to taxonomy skills. No AI: every match can be traced to a sentence.
 
 const ACTION = /\b(led|managed|founded|co-founded|built|designed|launched|organi[sz]ed|coordinated|headed|created|developed|initiated)\b/i
-const QUANT = /(\d+\s?%|\$\s?\d|€\s?\d|\b\d{2,}\b|\b\d+\s?(people|members|students|clients|stores|users|volunteers)\b)/i
+const QUANT = /(?:\b\d+(?:[.,]\d+)?\s?(?:%|percent\b|people\b|members\b|students\b|clients\b|customers\b|users\b|employees\b|volunteers\b|stores\b|projects\b|events\b|orders\b|hours\b|days\b|weeks\b|months\b|countries\b|teams\b|participants\b|applications\b|records\b|cases\b)|\b(?:increased|decreased|reduced|improved|grew|raised|cut|saved|generated|managed|served|processed|reached|delivered|completed|supported)\b.{0,35}\b\d+(?:[.,]\d+)?\b|[$€£]\s?\d+(?:[.,]\d+)?)/i
 
 function escapeRe(s) { return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') }
 
