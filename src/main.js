@@ -5,6 +5,7 @@ import { $, esc, act, actions, setRender, render, go, toast, status, spin } from
 import { onboard, bindOnboard, discover, drawFingerprint, profilePage, activities } from './candidate.js'
 import { marketplace, topicPage, learning, coursePage, feedbackPage, PROMPTS } from './develop.js'
 import { applyPage, jobPage, challengePage, groupPage, leaveChallenge } from './apply.js'
+import { casePage } from './showcase.js'
 import { discoverPage, jobsPage, assessPage, jobPipeline, comparePage, candidatePage, topicsAdmin, companyPage } from './employer.js'
 
 // ---------- navigation: four stages, one small tab row per stage ----------
@@ -13,20 +14,24 @@ const STAGES = [
   ['Develop', '#develop'],
   ['Demonstrate', '#apply'],
   ['Connect', '#e-discover'],
+  ['Why Achievers', '#case'],
 ]
 const SUBNAV = [
   [['#onboard', 'Add evidence'], ['#discover', 'Skill Fingerprint'], ['#profile', 'Profile'], ['#activities', 'Activities']],
   [['#develop', 'Topics'], ['#develop/learn', 'Learning Hub'], ['#develop/feedback', 'Feedback']],
   [],
   [['#e-discover', 'Talent discovery'], ['#e-jobs', 'Job openings'], ['#e-assess', 'Assessments'], ['#e-company', 'Company']],
+  [['#case', 'CV vs fingerprint'], ['#case/employer', 'Employer view'], ['#case/impact', 'Impact and model']],
 ]
 function stageOf(h) {
+  if (h.startsWith('case')) return 4
   if (h.startsWith('e-')) return 3
   if (/^(apply|job|challenge|group)/.test(h)) return 2
   if (/^(develop|topic|course)/.test(h)) return 1
   return 0
 }
 
+const PROTO = `<div class="banner proto"><span><b>Prototype.</b> Topics, courses, companies and candidates on this screen are fictional demonstration data.</span></div>`
 async function route() {
   const raw = location.hash.slice(1)
   let [path, query] = raw.split('?')
@@ -35,6 +40,7 @@ async function route() {
   $('.help').hidden = path.startsWith('ref/')
   if (!path.startsWith('challenge/') && !path.startsWith('group/')) leaveChallenge()
   if (path.startsWith('ref/')) return refereeView(path.slice(4))
+  if (path.startsWith('case')) return showCase(path)
   if (!S.started) return path === 'start' ? welcome() : home()
   if (path === 'home') return home()
   if (path === 'start') path = ''
@@ -69,7 +75,7 @@ async function route() {
       case 'e-company': html = companyPage(); break
       default: html = `<div class="card stack"><h2>Page not found</h2><a class="btn" href="#discover">Go to my fingerprint</a></div>`
     }
-    view.innerHTML = html
+    view.innerHTML = (stageOf(path) >= 1 && stageOf(path) <= 3 ? PROTO : '') + html
     // work-style sliders glide instead of jumping between five positions
     view.querySelectorAll('input[type=range]').forEach(r => { const s = r.getAttribute('step'); if (!s || s === '1') r.step = '0.05' })
     if (a === 'onboard') bindOnboard()
@@ -95,7 +101,7 @@ function whoHtml() {
 function shell(path, landing = false) {
   const st = landing ? -1 : stageOf(path)
   $('#nav').hidden = false
-  $('#nav').innerHTML = STAGES.map(([n, h], i) => `<a href="${h}" ${i === st ? 'aria-current="page"' : ''}><b>${i + 1}</b>${n}</a>`).join('')
+  $('#nav').innerHTML = STAGES.map(([n, h], i) => `<a href="${!S.started && i < 4 ? '#start' : h}" ${i === st ? 'aria-current="page"' : ''}>${n}</a>`).join('')
   $('#who').innerHTML = whoHtml()
   const items = st >= 0 ? SUBNAV[st] : []
   const sub = $('#subnav')
@@ -107,6 +113,11 @@ function shell(path, landing = false) {
       .sort((a, b) => b.length - a.length)[0]
     sub.innerHTML = `<div class="wrap">${items.map(([h, n]) => `<a href="${h}" ${h === cur ? 'aria-current="page"' : ''}>${n}</a>`).join('')}</div>`
   }
+}
+function showCase(path) {
+  shell(path)
+  $('#view').innerHTML = casePage(path)
+  heroDraw($('#fpmaya'))
 }
 async function switchView(v, navigate = true) {
   setView(v)
@@ -159,7 +170,7 @@ function home() {
     <div><div class="eyebrow">Talent experience</div>
       <h1>There is more to you than a CV.</h1>
       <p class="lede">A Skill Fingerprint that grows with you: your CV, short lessons, contributions and job simulations, each labelled by where the evidence came from. Employers see anonymised evidence, not just a CV.</p>
-      <div class="row"><a class="btn primary" href="${cta}">${label}</a><button data-act="scroll" data-to="how">How it works</button></div>
+      <div class="row"><a class="btn primary" href="${cta}">${label}</a><a class="btn" href="#case">See a sample</a><button class="ghost" data-act="scroll" data-to="how">How it works</button></div>
     </div>
     <canvas id="fph" width="560" height="560" aria-hidden="true"></canvas>
   </section>

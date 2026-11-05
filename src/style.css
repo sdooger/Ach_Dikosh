@@ -190,8 +190,6 @@ footer{color:var(--muted);font-size:12.5px;padding-block:24px;border-top:1px sol
 
 /* one header: logo, four stages, Help, theme */
 nav.steps a{white-space:nowrap}
-nav.steps a b{font-family:var(--font-mono);font-size:11px;font-weight:500;color:var(--accent);margin-right:8px}
-nav.steps a[aria-current="page"] b{color:var(--ink)}
 .subnav{background:var(--surface);border-bottom:1px solid var(--line)}
 .subnav .wrap{display:flex;gap:4px;overflow-x:auto;padding-block:6px}
 .subnav a{display:flex;align-items:center;padding:6px 12px;border-radius:99px;text-decoration:none;color:var(--muted);font-size:13px;font-weight:500;white-space:nowrap;transition:background .2s,color .2s}
@@ -291,3 +289,44 @@ input[type=range]{accent-color:var(--accent)}
 #toast.show{opacity:1;transform:translate(-50%,0)}
 #toast.err{background:var(--miss);color:#fff}
 .card{transition:border-color .2s}
+
+/* ===== Why Achievers showcase ===== */
+.banner.proto{background:var(--sunk);color:var(--muted);font-size:13px;padding:9px 14px;margin-bottom:18px}
+.banner.proto b{color:var(--ink)}
+.duo{display:grid;grid-template-columns:minmax(0,.8fr) minmax(0,1.2fr);gap:18px;align-items:start}
+@media (max-width:900px){.duo{grid-template-columns:minmax(0,1fr)}}
+.paper{background:#fff;color:#2b2f33;border:1px solid var(--line);border-radius:6px;padding:22px 24px;font-size:13px;line-height:1.5;box-shadow:0 10px 28px rgba(0,0,0,.10);transform:rotate(-.6deg)}
+:root[data-theme="dark"] .paper{box-shadow:0 10px 28px rgba(0,0,0,.45)}
+.paper-top{display:flex;justify-content:space-between;gap:10px;border-bottom:2px solid #2b2f33;padding-bottom:8px;margin-bottom:10px;flex-wrap:wrap}
+.paper-top b{font-family:var(--font-display);font-size:18px}
+.paper-top span{color:#6a727b}
+.paper h4{margin:12px 0 4px;font-family:var(--font-mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#6a727b}
+.paper p{margin:0 0 4px}
+.paper ul{margin:0;padding-left:18px}
+.paper-q{margin-top:16px;padding:10px 12px;border:1.5px dashed var(--miss);border-radius:6px;color:var(--miss);font-weight:600;font-size:12.5px}
+.fp-demo{display:flex;flex-direction:column;align-items:center;gap:10px}
+.fp-demo canvas{width:100%;max-width:230px;aspect-ratio:1}
+.cs-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
+.cs{padding:12px 0;border-top:1px solid var(--line);display:flex;flex-direction:column;gap:8px}
+.cs:first-child{border-top:0}
+.cs-top{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:10px;align-items:center}
+.cs-top .meter{padding-bottom:9px}
+.cs details summary{cursor:pointer;font-size:13px;font-weight:600;color:var(--accent);list-style:none}
+.cs details summary::-webkit-details-marker{display:none}
+.cs details summary::before{content:"+ ";font-family:var(--font-mono)}
+.cs details[open] summary::before{content:"– "}
+.why{margin-top:8px;display:flex;flex-direction:column;gap:8px;border-left:2px solid var(--line);padding-left:12px}
+.why div{display:flex;gap:10px;align-items:flex-start}
+.why p{margin:0;font-size:13.5px}
+.why .pill{margin-top:1px}
+.callout{display:flex;justify-content:space-between;gap:20px;align-items:center;flex-wrap:wrap;margin-top:24px;padding:22px 24px;border-radius:14px;background:var(--accent-soft);border:1px solid transparent}
+.callout h3{margin-bottom:6px}
+.callout p{margin:0;max-width:62ch;color:var(--ink);font-size:14.5px}
+.avatar{width:42px;height:42px;border-radius:50%;display:grid;place-items:center;font-family:var(--font-display);font-weight:700;font-size:17px;color:var(--accent);background:repeating-linear-gradient(135deg,var(--accent-soft) 0 6px,var(--sunk) 6px 12px);border:1px solid var(--line)}
+.anon{transition:border-color .2s,transform .2s}
+.anon:hover{border-color:var(--accent);transform:translateY(-2px)}
+.pill.est{background:transparent;border:1px dashed var(--accent);color:var(--accent);align-self:flex-start}
+.metric .goal{margin:auto 0 0;padding-top:10px;border-top:1px solid var(--line);font-size:13.5px;font-weight:600}
+ul.plain{margin:0;padding-left:18px;font-size:14px;display:flex;flex-direction:column;gap:4px}
+.model .chip{align-self:flex-start}
+@media (prefers-reduced-motion:reduce){.anon,.anon:hover{transition:none;transform:none}.paper{transform:none}}
