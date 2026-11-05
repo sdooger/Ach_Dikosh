@@ -10,29 +10,30 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
   <link rel="stylesheet" href="/src/style.css">
-  <link rel="stylesheet" href="/src/theme.css">
 </head>
 <body>
   <header><div class="wrap bar">
     <a class="brand" href="#home"><img class="logo-light" src="/logo-light.png" alt="" width="26" height="30"><img class="logo-dark" src="/logo-dark.png" alt="" width="26" height="30">Achievers</a>
-    <nav class="steps" id="nav" hidden></nav>
-    <div class="help">
-      <button class="navbtn" id="helpbtn" data-act="help" aria-expanded="false" aria-controls="helppanel">Help <span aria-hidden="true">▾</span></button>
-      <div class="helppanel" id="helppanel" hidden>
-        <h3>Help</h3>
-        <details name="help"><summary>What is a Skill Fingerprint?</summary><p>A profile of your skills where every item shows where it came from: your CV, what you wrote yourself, a colleague, a lesson, a contribution, a test or a job simulation. There is no overall score.</p></details>
-        <details name="help"><summary>How do I start?</summary><p>Choose <b>Try it now</b>, then <b>Continue as guest</b> or create an account. In stage 1 you add your CV and answer a few short questions, and the fingerprint appears under <b>Discover</b>.</p></details>
-        <details name="help"><summary>What are the four stages?</summary><p>1 Register / Discover: build your fingerprint. 2 Develop &amp; Express: topics, contributions and lessons. 3 Demonstrate: apply to roles and take job simulations. 4 Connect: the employer view with anonymised profiles.</p></details>
-        <details name="help"><summary>What do the coloured labels mean?</summary><p>They show the origin of each piece of evidence. Anyone reading your profile can tell what you claimed yourself from what others confirmed or what was assessed.</p></details>
-        <details name="help"><summary>What is the Candidate / Employer switch?</summary><p>It switches between the student view and the employer view of the same demo, so you can see what a recruiter sees: anonymised mini-CVs, assessments and side-by-side comparison.</p></details>
-        <details name="help"><summary>Where is my data stored?</summary><p>In guest mode only in this browser. With an account it is saved to your account. Companies and sample candidates are fictional demo data.</p></details>
-        <details name="help"><summary>Is there an overall score?</summary><p>No. Your fingerprint never turns into a single number, and no automated hiring decision is made.</p></details>
+    <nav class="steps" aria-label="Platform stages">
+      <span id="nav" hidden></span>
+      <div class="help">
+        <button class="navbtn" id="helpbtn" data-act="help" aria-expanded="false" aria-controls="helppanel">Help <span aria-hidden="true">▾</span></button>
+        <div class="helppanel" id="helppanel" hidden>
+          <h3>Help</h3>
+          <details name="help"><summary>What is a Skill Fingerprint?</summary><p>A profile of your skills where every item shows where it came from: your CV, what you wrote yourself, a colleague, a lesson, a contribution, a test or a job simulation. There is no overall score.</p></details>
+          <details name="help"><summary>How do I start?</summary><p>Choose <b>Try it now</b>, then <b>Continue as guest</b> or create an account. In <b>Build</b> you add your CV and answer a few short questions, and the fingerprint appears under <b>Skill Fingerprint</b>.</p></details>
+          <details name="help"><summary>What are the four stages?</summary><p><b>Build</b>: your fingerprint. <b>Develop</b>: topics, contributions and lessons. <b>Demonstrate</b>: apply to roles and take job simulations. <b>Connect</b>: the employer view with anonymised profiles.</p></details>
+          <details name="help"><summary>What do the coloured labels mean?</summary><p>They show the origin of each piece of evidence. Anyone reading your profile can tell what you claimed yourself from what others confirmed or what was assessed.</p></details>
+          <details name="help"><summary>What is Connect?</summary><p>It shows what a recruiter sees in the same demo: anonymised mini-CVs, assessments and side-by-side comparison. Leave it any time through another stage.</p></details>
+          <details name="help"><summary>Where is my data stored?</summary><p>In guest mode only in this browser. With an account it is saved to your account. Companies and sample candidates are fictional demo data.</p></details>
+          <details name="help"><summary>Is there an overall score?</summary><p>No. Your fingerprint never turns into a single number, and no automated hiring decision is made.</p></details>
+        </div>
       </div>
-    </div>
+    </nav>
     <button class="navbtn theme" data-act="theme" aria-label="Switch between light and dark theme" title="Light / dark theme">◐</button>
     <div class="who" id="who"></div>
   </div></header>
-  <nav class="stages" id="stages" aria-label="Platform stages" hidden></nav>
+  <nav class="subnav" id="subnav" aria-label="Section" hidden></nav>
   <main class="wrap" id="view"></main>
   <footer class="wrap">Achievers prototype · Skills and role requirements from Canada's OaSIS 2025 (ESDC, Open Government Licence – Canada). Companies, Maya and other sample candidates are fictional demonstration data. No overall score or automated hiring decision is produced.</footer>
   <script type="module" src="/src/main.js"></script>
