@@ -4,37 +4,37 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <title>Achievers</title>
-  <meta name="description" content="Build an evidence-based Skill Fingerprint from your CV and the people you have worked with.">
+  <meta name="description" content="An evidence-based Skill Fingerprint connecting students' experiences, learning, assessments and employer opportunities.">
   <link rel="icon" type="image/png" href="/logo-light.png">
   <script>try{document.documentElement.dataset.theme=localStorage.getItem('theme')||'light'}catch(e){}</script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
   <link rel="stylesheet" href="/src/style.css">
+  <link rel="stylesheet" href="/src/theme.css">
 </head>
 <body>
   <header><div class="wrap bar">
     <a class="brand" href="#home"><img class="logo-light" src="/logo-light.png" alt="" width="26" height="30"><img class="logo-dark" src="/logo-dark.png" alt="" width="26" height="30">Achievers</a>
-    <nav class="steps">
-      <span id="nav" hidden><a href="#register">Add evidence</a><a href="#fingerprint">Skill Fingerprint</a></span>
-      <div class="help">
-        <button class="navbtn" id="helpbtn" data-act="help" aria-expanded="false" aria-controls="helppanel">Help <span aria-hidden="true">▾</span></button>
-        <div class="helppanel" id="helppanel" hidden>
-          <h3>Help</h3>
-          <details name="help"><summary>How do I get my Skill Fingerprint?</summary><p>Open <b>Add evidence</b>, upload your CV (PDF, Word or text), pick a target role and press <b>Build my Skill Fingerprint</b>.</p></details>
-          <details name="help"><summary>What do levels 1 to 5 mean?</summary><p>1: the skill is mentioned. 2: you did it with ownership (led, built, organised). 3: with a measurable result. The level goes up when the skill shows up in 3 or more places, or when another kind of source, such as a colleague or a test, confirms it. 5 is the maximum.</p></details>
-          <details name="help"><summary>What do Meets, Partial and Gap mean?</summary><p><b>Meets</b>: your level reaches what the role asks for. <b>Partial</b>: some evidence, below the required level. <b>Gap</b>: no evidence yet. The triangle under the bars marks the level the role needs.</p></details>
-          <details name="help"><summary>What are the coloured labels?</summary><p>Each piece of evidence shows where it came from: your CV, what you wrote yourself, a colleague, a practice task or a test. Anyone reading your profile can tell what you claimed from what others confirmed.</p></details>
-          <details name="help"><summary>How do referee links work?</summary><p>On Add evidence, create a request for someone who worked with you and send them the link. They answer one question without making an account, and the answer appears in your fingerprint as peer feedback. Referee links need an account, not guest mode.</p></details>
-          <details name="help"><summary>Where is my data stored?</summary><p>In guest mode only in this browser. With an account it is saved to your account.</p></details>
-          <details name="help"><summary>Is there an overall score?</summary><p>No. Your fingerprint never turns into a single number.</p></details>
-        </div>
+    <nav class="steps" id="nav" hidden></nav>
+    <div class="help">
+      <button class="navbtn" id="helpbtn" data-act="help" aria-expanded="false" aria-controls="helppanel">Help <span aria-hidden="true">▾</span></button>
+      <div class="helppanel" id="helppanel" hidden>
+        <h3>Help</h3>
+        <details name="help"><summary>What is a Skill Fingerprint?</summary><p>A profile of your skills where every item shows where it came from: your CV, what you wrote yourself, a colleague, a lesson, a contribution, a test or a job simulation. There is no overall score.</p></details>
+        <details name="help"><summary>How do I start?</summary><p>Choose <b>Try it now</b>, then <b>Continue as guest</b> or create an account. In stage 1 you add your CV and answer a few short questions, and the fingerprint appears under <b>Discover</b>.</p></details>
+        <details name="help"><summary>What are the four stages?</summary><p>1 Register / Discover: build your fingerprint. 2 Develop &amp; Express: topics, contributions and lessons. 3 Demonstrate: apply to roles and take job simulations. 4 Connect: the employer view with anonymised profiles.</p></details>
+        <details name="help"><summary>What do the coloured labels mean?</summary><p>They show the origin of each piece of evidence. Anyone reading your profile can tell what you claimed yourself from what others confirmed or what was assessed.</p></details>
+        <details name="help"><summary>What is the Candidate / Employer switch?</summary><p>It switches between the student view and the employer view of the same demo, so you can see what a recruiter sees: anonymised mini-CVs, assessments and side-by-side comparison.</p></details>
+        <details name="help"><summary>Where is my data stored?</summary><p>In guest mode only in this browser. With an account it is saved to your account. Companies and sample candidates are fictional demo data.</p></details>
+        <details name="help"><summary>Is there an overall score?</summary><p>No. Your fingerprint never turns into a single number, and no automated hiring decision is made.</p></details>
       </div>
-    </nav>
+    </div>
     <button class="navbtn theme" data-act="theme" aria-label="Switch between light and dark theme" title="Light / dark theme">◐</button>
     <div class="who" id="who"></div>
   </div></header>
+  <nav class="stages" id="stages" aria-label="Platform stages" hidden></nav>
   <main class="wrap" id="view"></main>
-  <footer class="wrap">Achievers · Step 1 of the platform. Skills and role requirements come from Canada's OaSIS 2025 (ESDC, Open Government Licence – Canada). Every skill links back to the sentence or person it came from; no overall score is produced.</footer>
+  <footer class="wrap">Achievers prototype · Skills and role requirements from Canada's OaSIS 2025 (ESDC, Open Government Licence – Canada). Companies, Maya and other sample candidates are fictional demonstration data. No overall score or automated hiring decision is produced.</footer>
   <script type="module" src="/src/main.js"></script>
 </body>
 </html>

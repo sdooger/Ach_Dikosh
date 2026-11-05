@@ -1,316 +1,128 @@
 import taxonomy from '../data/taxonomy.json'
-import aliases from '../data/aliases.json'
-import roles from '../data/roles.json'
-import * as store from './store.js'
-const readCvFile = async f => (await import('./parse.js')).readCvFile(f)
-import { matchText, extractExperiences, guessName, skillLevel, gapStatus } from './match.js'
+import * as db from './db.js'
+import { S, loadMe, setView } from './state.js'
+import { $, esc, act, actions, setRender, render, go, toast, status, spin } from './ui.js'
+import { onboard, bindOnboard, discover, drawFingerprint, profilePage, activities } from './candidate.js'
+import { marketplace, topicPage, learning, coursePage, feedbackPage, PROMPTS } from './develop.js'
+import { applyPage, jobPage, challengePage, groupPage, leaveChallenge } from './apply.js'
+import { discoverPage, jobsPage, assessPage, jobPipeline, comparePage, candidatePage, topicsAdmin, companyPage } from './employer.js'
 
-// ---------- lookups ----------
-const SKILLS = {}
-for (const c of taxonomy.categories) for (const s of c.subcategories) for (const k of s.skills) SKILLS[k.id] = { ...k, cat: c.name, sub: s.name }
-const ROLES = Object.fromEntries(roles.roles.map(r => [r.id, r]))
-const SRC = { cv: 'From CV', self: 'Self-reported', peer: 'Peer feedback', practice: 'Practice', contribution: 'Contribution', assessed: 'Assessed' }
-// Two questions per OaSIS cognitive ability; both right = level 3, one right = level 2
-const COG = [
-  { ab: 'A.01.a.04', q: 'What comes next: 2, 6, 12, 20, 30, …?', o: ['40', '42', '44'], a: 1 },
-  { ab: 'A.01.a.04', q: 'Which number does not belong: 3, 5, 7, 9, 11, 13?', o: ['3', '9', '13'], a: 1 },
-  { ab: 'A.01.a.03', q: 'Every analyst on the team uses SQL. Dana does not use SQL. Which must be true?', o: ['Dana is new', 'Dana is not an analyst on the team', 'Some analysts skip SQL'], a: 1 },
-  { ab: 'A.01.a.03', q: 'If the report is late, the client complains. The client did not complain. So:', o: ['The report was late', 'The report was not late', 'We cannot tell'], a: 1 },
-  { ab: 'A.01.b.02', q: 'A price rises 20%, then falls 20%. Compared with the start it is:', o: ['the same', '4% lower', '4% higher'], a: 1 },
-  { ab: 'A.01.b.02', q: '4 people finish a task in 6 days. At the same pace, how long do 6 people take?', o: ['4 days', '5 days', '9 days'], a: 0 },
-]
-const REFERABLE = id => /^[FB]\./.test(id)
-const STYLE = [['plan', 'I plan ahead', 'I improvise'], ['social', 'I recharge alone', 'I recharge with people'], ['detail', 'Big picture first', 'Details first'], ['pace', 'Steady pace', 'Bursts under deadline'], ['decide', 'Decide with data', 'Decide with intuition']]
+const STAGES = [['Register / Discover', '#discover', 'candidate'], ['Develop & Express', '#develop', 'candidate'], ['Demonstrate', '#apply', 'candidate'], ['Connect', '#e-discover', 'employer']]
+const CAND_NAV = [['#discover', 'Discover'], ['#develop', 'Develop'], ['#apply', 'Apply'], ['#activities', 'My Activities'], ['#profile', 'My Profile']]
+const EMP_NAV = [['#e-discover', 'Talent Discovery'], ['#e-jobs', 'Job Openings'], ['#e-assess', 'Assessments'], ['#e-company', 'Company']]
 
-// ---------- state ----------
-let D = { profile: {}, cv: null, experiences: [], evidence: [], refs: [] }
-let started = false
-let pendingFile = null
-let showAll = false
-const open = new Set()
+function stageOf(h) {
+  if (h.startsWith('e-')) return 3
+  if (/^(apply|job|challenge|group)/.test(h)) return 2
+  if (/^(develop|topic|course)/.test(h)) return 1
+  return 0
+}
 
-const $ = s => document.querySelector(s)
-const esc = t => String(t ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]))
-const chip = src => `<span class="chip src-${src}">${SRC[src]}</span>`
-const byskill = () => { const m = {}; D.evidence.forEach(e => (m[e.skill_id] = m[e.skill_id] || []).push(e)); return m }
-const firstName = () => (D.profile.full_name || '').split(' ')[0]
-function status(el, msg, err = false) { if (!el) return; el.className = 'status' + (err ? ' err' : ''); el.innerHTML = msg }
-async function refresh() { D = await store.loadAll() }
-
-// ---------- routing ----------
-let lastHash = null
 async function route() {
-  const h = location.hash.slice(1)
-  $('.help').hidden = h.startsWith('ref/')
-  if (h !== lastHash) { // new page: back to the top, fade the view in
-    lastHash = h; setHelp(false); scrollTo({ top: 0, behavior: 'instant' })
-    const v = $('#view'); v.classList.remove('enter'); void v.offsetWidth; v.classList.add('enter')
+  const raw = location.hash.slice(1)
+  let [path, query] = raw.split('?')
+  const params = new URLSearchParams(query || '')
+  const view = $('#view')
+  $('.help').hidden = path.startsWith('ref/')
+  if (!path.startsWith('challenge/') && !path.startsWith('group/')) leaveChallenge()
+  if (path.startsWith('ref/')) return refereeView(path.slice(4))
+  if (!S.started) return path === 'start' ? welcome() : home()
+  if (path === 'start' || path === 'home') path = ''
+  const wantEmp = path.startsWith('e-')
+  // topic pages are shared by both views
+  if (path && !path.startsWith('topic/') && wantEmp !== (S.view === 'employer')) await switchView(wantEmp ? 'employer' : 'candidate', false)
+  shell(path)
+  if (!path) return go(S.view === 'employer' ? '#e-discover' : (S.profile.onboarding || 0) >= 4 ? '#discover' : '#onboard')
+  view.innerHTML = `<p class="status">${spin}Loading…</p>`
+  try {
+    const [a, b] = path.split('/')
+    let html
+    switch (a) {
+      case 'onboard': html = onboard(); break
+      case 'discover': html = discover(); break
+      case 'develop': html = b === 'learn' ? learning() : b === 'feedback' ? feedbackPage(params) : await marketplace(); break
+      case 'topic': html = await topicPage(decodeURIComponent(b)); break
+      case 'course': html = coursePage(b); break
+      case 'apply': html = await applyPage(); break
+      case 'job': html = await jobPage(decodeURIComponent(b)); break
+      case 'challenge': html = await challengePage(b); break
+      case 'group': html = await groupPage(b); break
+      case 'activities': html = await activities(); break
+      case 'profile': html = profilePage(); break
+      case 'e-discover': html = await discoverPage(); break
+      case 'e-jobs': html = await jobsPage(); break
+      case 'e-assess': html = await assessPage(); break
+      case 'e-job': html = await jobPipeline(decodeURIComponent(b)); break
+      case 'e-compare': html = await comparePage(decodeURIComponent(b), (params.get('ids') || '').split(',').filter(Boolean)); break
+      case 'e-cand': html = await candidatePage(decodeURIComponent(b), params); break
+      case 'e-topics': html = await topicsAdmin(); break
+      case 'e-company': html = companyPage(); break
+      default: html = `<div class="card"><h2>Page not found</h2><a href="#discover">Go to my fingerprint</a></div>`
+    }
+    view.innerHTML = html
+    if (a === 'onboard') bindOnboard()
+    if (a === 'discover') drawFingerprint()
+    if (a === 'group') { const m = $('#msgs'); if (m) m.scrollTop = m.scrollHeight; actions['g-alloc']?.() }
+  } catch (e) {
+    console.error(e)
+    view.innerHTML = `<div class="card stack"><h2>Something went wrong</h2><p class="hint">${esc(e.message || e)}</p><p class="hint">If this mentions a missing column or table, run supabase/schema_v2.sql in Supabase.</p></div>`
   }
-  if (h.startsWith('ref/')) return refereeView(h.slice(4))
-  if (h === '' || h === 'home') return home()
-  if (!started) return welcome()
+}
+setRender(() => { const y = window.scrollY; route().then(() => window.scrollTo(0, y)) })
+let lastHash = null
+window.addEventListener('hashchange', () => {
+  setHelp(false)
+  route(); window.scrollTo(0, 0)
+  if (location.hash !== lastHash) { lastHash = location.hash; const v = $('#view'); v.classList.remove('enter'); void v.offsetWidth; v.classList.add('enter') }
+})
+
+function shell(path) {
+  const emp = S.view === 'employer', items = emp ? EMP_NAV : CAND_NAV
+  const st = stageOf(path)
   $('#nav').hidden = false
-  const v = h === 'register' ? 'register' : 'fingerprint'
-  document.querySelectorAll('#nav a').forEach(a => a.getAttribute('href') === '#' + v ? a.setAttribute('aria-current', 'page') : a.removeAttribute('aria-current'))
-  if (v === 'fingerprint' && !D.cv && !D.evidence.length) { location.hash = '#register'; return }
-  $('#view').innerHTML = v === 'register' ? registerHtml() : fingerprintHtml()
-  if (v === 'register') bindRegister(); else drawFingerprint()
-  renderWho()
+  $('#nav').innerHTML = items.map(([h, n]) => `<a href="${h}" ${('#' + path).startsWith(h) || (h === '#discover' && path === 'onboard') ? 'aria-current="page"' : ''}>${n}</a>`).join('')
+  $('#who').innerHTML = `<div class="switch" role="group" aria-label="View"><button data-act="view" data-v="candidate" aria-pressed="${!emp}">Candidate</button><button data-act="view" data-v="employer" aria-pressed="${emp}">Employer</button></div>
+    ${db.currentMode() === 'cloud' ? '<button class="ghost" data-act="signout">Sign out</button>' : `<span class="pill">Guest</span>${db.cloudAvailable ? '<button class="ghost" data-act="signout">Exit</button>' : ''}`}`
+  $('#stages').hidden = false
+  $('#stages').innerHTML = `<div class="wrap">${STAGES.map(([n, h], i) => `<a href="${h}" class="${i === st ? 'on' : ''}"><b>${i + 1}</b>${n}</a>`).join('')}</div>`
 }
-window.addEventListener('hashchange', route)
-
-async function renderWho() {
-  const m = store.currentMode()
-  $('#who').innerHTML = !started ? '' : m === 'cloud'
-    ? `<span>${esc(await store.userEmail())}</span><button class="ghost" data-act="signout">Sign out</button>`
-    : `<span class="pill">Guest · saved in this browser</span>${store.cloudAvailable ? '<button class="ghost" data-act="toauth">Create account</button>' : ''}`
+async function switchView(v, navigate = true) {
+  setView(v)
+  await loadMe()
+  if (v === 'employer' && !S.profile.is_recruiter) { await db.saveProfile({ is_recruiter: true }); S.profile.is_recruiter = true }
+  if (navigate) { toast(v === 'employer' ? 'Employer view' : 'Candidate view'); go(v === 'employer' ? '#e-discover' : '#discover') }
 }
+act('view', el => switchView(el.dataset.v))
 
-// ---------- landing ----------
+// ---------- landing (before sign-in) ----------
 const JOURNEY = [
-  ['1', 'Build', "Upload your CV. It is matched to Canada's OaSIS skills taxonomy, and people who worked with you add what they saw.", true],
-  ['2', 'Develop', 'Respond to real business topics and take short lessons from companies and universities. Your contributions make you visible and grow your fingerprint.', false],
-  ['3', 'Demonstrate', 'Realistic job challenges that show how you reason and decide, alone or in a group.', false],
-  ['4', 'Connect', 'Employers see anonymised, standardised profiles first, then meet the people who fit. People decide, not an automated ranking.', false],
+  ['1', 'Register / Discover', "Upload your CV. It is matched to Canada's OaSIS skills taxonomy, and people who worked with you add what they saw.", true],
+  ['2', 'Develop & Express', 'Respond to real business topics and take short lessons from companies and universities. Your contributions make you visible.', true],
+  ['3', 'Demonstrate', 'Apply to roles and take realistic job simulations that show how you reason and decide, alone or in a group.', true],
+  ['4', 'Connect', 'Employers see anonymised, standardised profiles first, then meet the people who fit. People decide, not an automated ranking.', true],
 ]
-// Fixed made-up evidence so the hero drawing has colour before anyone signs in
-function demoEvidence() {
-  const m = {}; let i = 0
-  for (const id in SKILLS) if (++i % 3) m[id] = [{ source: i % 11 === 0 ? 'peer' : i % 7 === 0 ? 'assessed' : 'cv', level: 1 + (i % 3) }]
-  return m
-}
-function home() {
-  $('#nav').hidden = !started
-  document.querySelectorAll('#nav a').forEach(a => a.removeAttribute('aria-current'))
-  $('#view').innerHTML = `<section class="lp-hero">
-    <div><div class="eyebrow">Talent experience</div>
-      <h1>There is more to you than a CV.</h1>
-      <p class="lede">Upload your CV and Achievers maps it to Canada's official skills taxonomy. Every skill links to the sentence it came from. Then ask people you worked with to confirm what they saw.</p>
-      <div class="row"><a class="btn primary" href="${started ? '#fingerprint' : '#start'}">${started ? 'Open my fingerprint' : 'Try it now'}</a><button data-act="scroll" data-to="how">How it works</button></div>
-    </div>
-    <canvas id="fph" width="560" height="560" aria-hidden="true"></canvas>
-  </section>
-  <section class="lp-sec" id="how"><div class="reveal"><div class="eyebrow">The journey</div><h2>From CV to interview in four steps</h2></div>
-    <div class="lp-steps">${JOURNEY.map(([n, name, text, live], i) => `<div class="card lp-step reveal ${live ? 'live' : 'flat'}" style="--i:${i + 1}">
-      <span class="n">${n}</span><h3>${name}</h3><p>${text}</p><span class="pill ${live ? 'ok' : ''}">${live ? 'Live now' : 'Next release'}</span></div>`).join('')}</div>
-  </section>
-  <section class="lp-sec"><div class="reveal"><div class="eyebrow">Why it is different</div><h2>Evidence you can check, not a score</h2></div>
-    <div class="lp-points">
-      <div class="reveal" style="--i:1"><h3>Every skill has a source</h3><p>Each skill links back to the sentence in your CV, or the person, it came from.</p></div>
-      <div class="reveal" style="--i:2"><h3>Labels you can trust</h3><p>An employer can tell what you wrote yourself from what others confirmed.</p><div class="row">${['cv', 'self', 'peer', 'assessed'].map(chip).join('')}</div></div>
-      <div class="reveal" style="--i:3"><h3>No overall score</h3><p>Your fingerprint is a multidimensional profile, never a single number or a hidden ranking.</p></div>
-    </div>
-  </section>
-  <section class="lp-sec"><div class="card stack lp-cta reveal"><h2>See your own fingerprint</h2><p class="lede">Upload a CV and compare it with the skills a role asks for.</p>
-    <a class="btn primary" href="${started ? '#fingerprint' : '#start'}">${started ? 'Open my fingerprint' : 'Try it now'}</a></div></section>`
-  drawFingerprint($('#fph'), demoEvidence(), 'achievers')
-  const io = 'IntersectionObserver' in window ? new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target) } }), { threshold: .15 }) : null
-  document.querySelectorAll('.reveal').forEach(el => io ? io.observe(el) : el.classList.add('in'))
-  renderWho()
-}
-
-// ---------- sign in ----------
-function welcome() {
-  $('#nav').hidden = true; $('#who').innerHTML = ''
-  $('#view').innerHTML = `<section class="auth"><div class="card stack">
-      ${store.cloudAvailable ? `<h2 id="authtitle">Create your account</h2>
-      <div><label for="email">Email</label><input type="email" id="email" autocomplete="email"></div>
-      <div><label for="pw">Password <span class="opt">(8+ characters)</span></label><input type="password" id="pw" autocomplete="new-password"></div>
-      <div class="row"><button class="primary" data-act="signup">Create account</button><button data-act="signin">Log in</button></div>
-      <p class="status" id="authst"></p><hr style="border:0;border-top:1px solid var(--line);width:100%">` : `<h2>Try it now</h2><p class="hint">Accounts are not configured on this deployment yet, so your data stays in this browser.</p>`}
-      <button data-act="guest">Continue as guest</button>
-      <p class="hint">Guest data stays in this browser only. Referee links need an account.</p>
-    </div></section>`
-}
-async function enter() { started = true; await refresh(); location.hash = D.cv || D.evidence.length ? '#fingerprint' : '#register'; route() }
-
-// ---------- add evidence ----------
-let cogStep = 0, cogAns = null
-function cogHtml() {
-  const rz = D.profile.reasoning || {}
-  cogAns = cogAns || Object.fromEntries(COG.map((_, i) => [i, rz['a' + i] ?? null]))
-  const q = COG[cogStep], last = cogStep === COG.length - 1
-  return `<div class="row between"><h2>Reasoning check</h2><span class="pill">Optional · ${cogStep + 1} of ${COG.length}</span></div>
-   <p class="hint">Two short questions for each of three OaSIS cognitive abilities. Correct answers add assessed evidence.</p>
-   <div class="q"><div style="font-size:14px">${cogStep + 1}. ${q.q}</div><div class="opts">${q.o.map((o, j) => `<label><input type="radio" name="cogq" value="${j}" ${cogAns[cogStep] === j ? 'checked' : ''}><span>${o}</span></label>`).join('')}</div></div>
-   <div class="row" style="margin-top:auto"><button data-act="cogprev" ${cogStep ? '' : 'disabled'}>Back</button>${last ? '<button class="primary" data-act="cog">Submit answers</button>' : '<button data-act="cognext">Next</button>'}</div>
-   <p class="status" id="cogst">${rz.done ? `Done: ${rz.score}/${COG.length} correct` : ''}</p>`
-}
-function registerHtml() {
-  const p = D.profile, st = p.work_style || {}
-  cogStep = 0; cogAns = null
-  return `<div class="head"><div><div class="eyebrow">Step 1 · Add evidence</div><h1>Build your Skill Fingerprint</h1>
-    <p class="lede">Several sources of evidence, each keeping its label, so an employer can tell what you wrote yourself from what someone else confirmed.</p></div></div>
-  <div class="grid g2">
-    <section class="card stack">
-      <div class="row between"><h2>Your CV</h2><span class="pill">Required</span></div>
-      <div class="drop" id="drop" tabindex="0" role="button" aria-label="Upload CV file"><strong>Drop your CV here or click to upload</strong><span class="hint">PDF, Word (.docx) or .txt${D.cv ? ` · current: ${esc(D.cv.file_name)}` : ''}</span><input type="file" id="file" accept=".pdf,.docx,.txt,.md" hidden></div>
-      <div><label for="cv">CV text <span class="opt">(filled from your file, or paste it)</span></label><textarea id="cv" style="min-height:190px">${esc(D.cv?.text || '')}</textarea></div>
-      <div><label for="linkedin">LinkedIn profile <span class="opt">(optional)</span></label><input type="text" id="linkedin" value="${esc(p.linkedin)}" placeholder="linkedin.com/in/your-name"></div>
-    </section>
-    <section class="card stack">
-      <h2>Beyond the CV</h2>
-      <div><label for="target">Target role</label><select id="target">${roles.roles.map(r => `<option value="${r.id}" ${p.target_role === r.id ? 'selected' : ''}>${esc(r.name)}</option>`).join('')}</select></div>
-      <div><label for="notes">A moment that shows how you work</label><textarea id="notes" placeholder="What was the situation, what did you do, and what changed?">${esc(p.notes)}</textarea></div>
-      <div><label for="projects">Projects, portfolio, volunteering <span class="opt">(optional, one per line)</span></label><textarea id="projects" style="min-height:80px">${esc(p.projects)}</textarea></div>
-      <div class="row" style="margin-top:auto"><button class="primary" data-act="build">Build my Skill Fingerprint</button></div>
-      <p class="status" id="buildst"></p>
-    </section>
-  </div>
-  <div class="row between sectionhead"><h2>Strengthen your fingerprint</h2><span class="pill">Optional · add any time</span></div>
-  <div class="grid g3">
-    <section class="card stack" id="refs">${refsHtml()}</section>
-    <section class="card stack">
-      <div class="row between"><h2>Work style</h2><span class="pill">Self-reported</span></div>
-      <p class="hint">Inspired by Big Five dimensions. It describes how you like to work and is never turned into a score.</p>
-      ${STYLE.map(([k, a, b]) => `<div class="slider"><span>${a}</span><input type="range" min="1" max="5" step="0.05" value="${st[k] || 3}" data-style="${k}" aria-label="${a} or ${b}"><span>${b}</span></div>`).join('')}
-    </section>
-    <section class="card stack" id="cogbox">${cogHtml()}</section>
-  </div>`
-}
-function refLink(r) { return `${location.origin}${location.pathname}#ref/${r.token}` }
-function refsHtml() {
-  const guest = store.currentMode() === 'guest'
-  return `<div class="row between"><h2>Meet me through others</h2>${chip('peer')}</div>
-   <p class="hint">Ask someone you worked with one structured question about you. Specific stories carry more weight than a generic endorsement.</p>
-   <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px">
-     <div><label for="rname">Their name</label><input type="text" id="rname" placeholder="e.g. Priya"></div>
-     <div><label for="rrel">Relationship</label><select id="rrel"><option>Manager</option><option>Teammate</option><option>Professor</option><option>Club lead</option></select></div>
-     <div><label for="rskill">Ask about</label><select id="rskill">${Object.values(SKILLS).filter(s => REFERABLE(s.id)).map(s => `<option value="${s.id}">${esc(s.name)}</option>`).join('')}</select></div>
-   </div>
-   <div class="row"><button data-act="addref">Create request</button></div><p class="status" id="refst"></p>
-   ${D.refs.map(r => `<div class="card flat stack" style="padding:14px">
-     <div class="row between"><b>${esc(r.referee_name)} · ${esc(r.relationship)}</b><span class="pill ${r.status === 'answered' ? 'ok' : ''}">${r.status === 'answered' ? 'Answered' : 'Waiting for answer'}</span></div>
-     <p class="hint">"Describe a specific moment when you saw ${esc(r.student_first_name || 'them')} show <b>${esc(r.skill_label.toLowerCase())}</b>. What did they do, and what changed as a result?"</p>
-     ${r.status === 'answered' ? `<p style="margin:0;font-size:14px">"${esc(r.response)}"</p>`
-       : guest ? `<label for="ga-${r.id}" class="hint" style="font-weight:600">Guest demo: type their answer here</label><textarea id="ga-${r.id}" style="min-height:70px"></textarea><div class="row"><button data-act="guestans" data-id="${r.id}">Add answer</button></div>`
-       : `<div class="linkbox"><input type="text" readonly value="${esc(refLink(r))}" aria-label="Link for ${esc(r.referee_name)}"><button data-act="copy" data-v="${esc(refLink(r))}">Copy link</button></div><p class="hint">Send this link to ${esc(r.referee_name)}. They answer without creating an account.</p>`}
-   </div>`).join('')}`
-}
-function bindRegister() {
-  const drop = $('#drop'), file = $('#file')
-  drop.onclick = () => file.click()
-  drop.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); file.click() } }
-  drop.ondragover = e => { e.preventDefault(); drop.classList.add('over') }
-  drop.ondragleave = () => drop.classList.remove('over')
-  drop.ondrop = e => { e.preventDefault(); drop.classList.remove('over'); if (e.dataTransfer.files[0]) loadFile(e.dataTransfer.files[0]) }
-  file.onchange = () => file.files[0] && loadFile(file.files[0])
-  document.querySelectorAll('[data-style]').forEach(r => r.onchange = async () => {
-    const ws = { ...(D.profile.work_style || {}), [r.dataset.style]: +r.value }
-    D.profile.work_style = ws; await store.saveProfile({ work_style: ws })
-  })
-}
-async function loadFile(f) {
-  const st = $('#buildst')
-  status(st, `<span class="spin"></span>Reading ${esc(f.name)}…`)
-  try {
-    const text = await readCvFile(f)
-    if (text.length < 40) throw new Error('empty')
-    pendingFile = f; $('#cv').value = text
-    status(st, `Read ${text.length.toLocaleString()} characters from ${esc(f.name)}. Check the text, then build your fingerprint.`)
-  } catch { status(st, 'Could not read text from this file. If it is a scanned PDF, paste the text into the box instead.', true) }
-}
-async function build(btn) {
-  const st = $('#buildst'), cv = $('#cv').value.trim()
-  if (cv.length < 40) return status(st, 'Add your CV first: upload a file or paste the text.', true)
-  btn.disabled = true; status(st, '<span class="spin"></span>Matching your CV to the skills taxonomy…')
-  try {
-    const notes = $('#notes').value.trim(), projects = $('#projects').value.trim()
-    const patch = { notes, projects, linkedin: $('#linkedin').value.trim(), target_role: $('#target').value }
-    if (!D.profile.full_name) patch.full_name = guessName(cv)
-    if (!D.cv || D.cv.text !== cv || pendingFile) await store.saveCv(pendingFile, cv)
-    pendingFile = null
-    await store.saveProfile(patch)
-    const evidence = [...matchText(cv, 'cv', aliases), ...matchText(notes + '\n' + projects, 'self', aliases, 2)].filter(e => SKILLS[e.skill_id])
-    const exps = extractExperiences(cv)
-    if (notes) exps.push({ role: 'In my own words', org: '', period: '', contribution: notes.slice(0, 600), source: 'self' })
-    await store.replaceCvEvidence(evidence, exps)
-    await refresh(); location.hash = '#fingerprint'
-  } catch (e) { status(st, 'Saving failed: ' + esc(e.message || e), true) } finally { btn.disabled = false }
-}
-
-// ---------- fingerprint ----------
-function fingerprintHtml() {
-  const p = D.profile, role = ROLES[p.target_role] || roles.roles[0], need = role.requires
-  const ev = byskill()
-  const lv = id => skillLevel(ev[id] || [])
-  const reqIds = Object.keys(need).filter(id => SKILLS[id] && id.startsWith('F.'))
-  const abilityIds = Object.keys(need).filter(id => SKILLS[id] && id.startsWith('A.'))
-  const abilitiesTested = abilityIds.filter(id => lv(id) > 0).length
-  const counts = { meets: 0, partial: 0, missing: 0 }
-  reqIds.forEach(id => counts[gapStatus(lv(id), need[id])]++)
-  const confirmed = D.evidence.filter(e => ['peer', 'assessed'].includes(e.source)).length
-  const tree = taxonomy.categories.map(c => {
-    const subs = c.subcategories.map(s => {
-      const rows = s.skills.filter(k => showAll || lv(k.id) || (need[k.id] && !k.id.startsWith('A.')))
-      if (!rows.length) return ''
-      return `<li><div class="sub">${esc(s.name)}</div><ul>${rows.map(k => skillRow(k, lv(k.id), need[k.id], ev[k.id] || [], role.oasis[k.id])).join('')}</ul></li>`
-    }).join('')
-    return subs ? `<li><div class="cat">${esc(c.name)}</div><ul>${subs}</ul></li>` : ''
-  }).join('')
-  const gaps = reqIds.filter(id => gapStatus(lv(id), need[id]) !== 'meets').sort((a, b) => (need[b] - lv(b)) - (need[a] - lv(a))).slice(0, 4)
-  return `<div class="head"><div><div class="eyebrow">Skill Fingerprint</div><h1>${esc(p.full_name || 'Your profile')}</h1>
-    <p class="lede">Built from ${D.cv ? esc(D.cv.file_name) : 'your CV'}${D.refs.some(r => r.status === 'answered') ? ' and people you worked with' : ''}. Levels show how strong the evidence is, from 1 (mentioned) to 5 (confirmed several ways).</p></div>
-    <div class="row"><label for="role2" style="margin:0">Compare with</label><select id="role2" style="width:auto">${roles.roles.map(r => `<option value="${r.id}" ${r.id === role.id ? 'selected' : ''}>${esc(r.name)}</option>`).join('')}</select><a class="btn" href="#register">Edit sources</a></div></div>
-  <div class="grid g-side">
-   <div class="stack">
-    <section class="card fp">
-      <canvas id="fpc" width="560" height="560" aria-label="Fingerprint drawing generated from your evidence"></canvas>
-      <div class="legend">${Object.keys(SRC).map(k => `<span class="chip src-${k}" style="opacity:${D.evidence.some(e => e.source === k) ? 1 : .35}">${SRC[k]}</span>`).join('')}</div>
-      <div class="kv"><span>Skills with evidence</span><b class="mono">${Object.keys(ev).length}</b><span>Evidence items</span><b class="mono">${D.evidence.length}</b><span>Confirmed by others or tests</span><b class="mono">${confirmed}</b><span>Overall score</span><span>None, by design</span></div>
-    </section>
-    <section class="card stack">
-      <h3>${esc(role.name)}: skills coverage</h3>
-      <div class="cover" aria-hidden="true"><span style="width:${counts.meets / reqIds.length * 100}%;background:var(--ok)"></span><span style="width:${counts.partial / reqIds.length * 100}%;background:var(--part)"></span></div>
-      <div class="kv"><span>At required level</span><b class="mono" style="color:var(--ok)">${counts.meets} of ${reqIds.length}</b><span>Some evidence</span><b class="mono" style="color:var(--part)">${counts.partial}</b><span>No evidence yet</span><b class="mono" style="color:var(--miss)">${counts.missing}</b></div>
-      <p class="hint">Counts the ${reqIds.length} skills that OaSIS 2025 rates 3 or higher for NOC ${esc(role.noc)} (${esc(role.nocLabel)}). Entry-level target = OaSIS rating minus 1.</p>
-      <p class="hint">Cognitive abilities: ${abilitiesTested} of ${abilityIds.length} rated abilities have test evidence. The rest are measured in challenges in the next release.</p>
-    </section>
-    ${gaps.length ? `<section class="card stack"><h3>Strengthen next</h3>${gaps.map(id => `<div class="gaprow"><span>${esc(SKILLS[id].name)} <span class="muted mono">${lv(id)}/${need[id]}</span></span>${REFERABLE(id) ? `<button class="ghost" data-act="askref" data-id="${id}">Ask a referee</button>` : ''}</div>`).join('')}
-      <p class="hint">Practice tasks and challenges that add evidence arrive in the next release.</p></section>` : ''}
-   </div>
-   <div class="stack">
-    <section class="card">
-      <div class="row between" style="margin-bottom:6px"><h2>Skill tree</h2><label class="row hint" style="margin:0;font-weight:400"><input type="checkbox" id="showall" ${showAll ? 'checked' : ''}> Show full taxonomy</label></div>
-      <p class="hint" style="margin-bottom:8px">Filled bars: your evidence level. Triangle: the level the role asks for. Click a skill to see where it came from.</p>
-      <ul class="tree">${tree || '<li class="hint">No skills found yet.</li>'}</ul>
-    </section>
-    <section class="card stack"><h2>Experience</h2>
-      ${D.experiences.length ? D.experiences.map(x => `<div class="exp"><div class="row between"><b>${esc(x.role)}${x.org ? ' · ' + esc(x.org) : ''}</b>${chip(x.source)}</div>${x.period ? `<span class="hint">${esc(x.period)}</span>` : ''}${x.contribution ? `<p>${esc(x.contribution)}</p>` : ''}</div>`).join('') : '<p class="hint">No dated experience found in the CV.</p>'}
-    </section>
-    ${D.profile.work_style ? `<section class="card stack"><div class="row between"><h3>Work style</h3>${chip('self')}</div>${STYLE.map(([k, a, b]) => `<div class="slider"><span>${a}</span><input type="range" min="1" max="5" step="0.05" value="${D.profile.work_style[k] || 3}" disabled aria-label="${a} or ${b}"><span>${b}</span></div>`).join('')}</section>` : ''}
-   </div></div>`
-}
-function skillRow(k, have, need, items, rating) {
-  const s = gapStatus(have, need)
-  const label = s === 'missing' && k.id.startsWith('A.') ? 'Not tested' : { meets: 'Meets', partial: 'Partial', missing: 'Gap', extra: 'Extra', none: '' }[s]
-  const dots = [1, 2, 3, 4, 5].map(i => `<i class="${i <= have ? 'f' : ''} ${i === need ? 't' : ''}"></i>`).join('')
-  return `<li class="skill"><button class="name" data-act="toggle" data-id="${k.id}" aria-expanded="${open.has(k.id)}" title="${esc(k.description)}${rating ? ` · OaSIS rating for this role: ${rating}/5` : ''}">${esc(k.name)}</button>
-   <span class="meter" role="img" aria-label="Evidence level ${have} of 5${need ? `, role needs ${need}` : ''}">${dots}</span><span class="st ${s}">${label}</span>
-   ${open.has(k.id) ? `<div class="evlist">${items.length ? items.map(e => `<div class="ev">${chip(e.source)}<p><b>${esc(e.title)}</b> · ${esc(e.detail)} <span class="muted mono">L${e.level || 1}</span></p></div>`).join('') : `<p class="hint">No evidence yet. ${esc(k.description)}</p>`}</div>` : ''}</li>`
-}
-function drawFingerprint(c = $('#fpc'), ev = byskill(), name = D.profile.full_name) {
+function heroDraw(c) {
   if (!c) return
   const x = c.getContext('2d'), W = c.width, css = getComputedStyle(document.documentElement)
+  let i = 0
   const bands = taxonomy.categories.flatMap(cat => cat.subcategories).filter(s => s.skills.length).map(s => {
-    const items = s.skills.flatMap(k => ev[k.id] || [])
-    const lvl = s.skills.reduce((a, k) => a + skillLevel(ev[k.id] || []), 0) / (s.skills.length * 5)
-    const bySrc = {}; items.forEach(e => bySrc[e.source] = (bySrc[e.source] || 0) + 1)
-    const top = Object.keys(bySrc).sort((a, b) => ['peer', 'assessed'].includes(b) - ['peer', 'assessed'].includes(a) || bySrc[b] - bySrc[a])[0]
-    return { p: lvl, col: css.getPropertyValue(top ? '--s-' + top : '--line').trim() }
+    let sum = 0; const by = {}
+    for (const k of s.skills) if (++i % 3) { sum += 1 + (i % 3); const src = i % 11 === 0 ? 'peer' : i % 7 === 0 ? 'assessed' : 'imported'; by[src] = (by[src] || 0) + 1 }
+    const top = Object.keys(by).sort((a, b) => ['peer', 'assessed'].includes(b) - ['peer', 'assessed'].includes(a) || by[b] - by[a])[0]
+    return { p: sum / (s.skills.length * 5), col: css.getPropertyValue(top ? '--s-' + top : '--line').trim() }
   })
-  let seed = [...(name || 'achievers')].reduce((a, ch) => (a * 31 + ch.charCodeAt(0)) | 0, 7)
+  let seed = [...'achievers'].reduce((a, ch) => (a * 31 + ch.charCodeAt(0)) | 0, 7)
   const rnd = () => { seed = (seed * 1103515245 + 12345) & 0x7fffffff; return seed / 0x7fffffff }
   x.clearRect(0, 0, W, W)
   const cx = W / 2, cy = W * .53, rings = 27
-  for (let i = 0; i < rings; i++) {
-    const b = bands[Math.floor(i / rings * bands.length)], base = 9 + i * 9.4
+  for (let n = 0; n < rings; n++) {
+    const b = bands[Math.floor(n / rings * bands.length)], base = 9 + n * 9.4
     x.strokeStyle = b.col; x.globalAlpha = b.p > 0 ? .95 : .5; x.lineWidth = b.p > 0 ? 2 + b.p * 9 : 1.3; x.lineCap = 'round'
     const gapAt = rnd() * 6.28, gapLen = .12 + rnd() * .35
     x.beginPath(); let pen = false
     for (let t = 0; t <= 6.29; t += .02) {
-      if (i > 3 && Math.abs((t - gapAt + 6.28) % 6.28) < gapLen) { pen = false; continue }
-      const r = base * (1 + .07 * Math.sin(2 * t + i * .2) + .05 * b.p * Math.cos(3 * t + i * .3) + .03 * Math.sin(5 * t + i))
+      if (n > 3 && Math.abs((t - gapAt + 6.28) % 6.28) < gapLen) { pen = false; continue }
+      const r = base * (1 + .07 * Math.sin(2 * t + n * .2) + .05 * b.p * Math.cos(3 * t + n * .3) + .03 * Math.sin(5 * t + n))
       const px = cx + r * Math.cos(t), py = cy + r * Math.sin(t) * (t > 3.3 && t < 6.1 ? 1.12 : .92)
       if (!pen) { x.moveTo(px, py); pen = true } else x.lineTo(px, py)
     }
@@ -318,109 +130,126 @@ function drawFingerprint(c = $('#fpc'), ev = byskill(), name = D.profile.full_na
   }
   x.globalAlpha = 1
 }
-
-// ---------- referee page (public, no account) ----------
-async function refereeView(token) {
-  $('#nav').hidden = true; $('#who').innerHTML = ''
-  const v = $('#view')
-  if (!store.sb) { v.innerHTML = `<div class="card"><h2>This link needs the online version</h2><p class="hint">Referee links work on the deployed site with accounts enabled.</p></div>`; return }
-  v.innerHTML = `<p class="status"><span class="spin"></span>Loading…</p>`
-  let r
-  try { r = await store.getRef(token) } catch { r = null }
-  if (!r) { v.innerHTML = `<div class="card"><h2>This link is not valid</h2><p class="hint">Ask the person who sent it for a new one.</p></div>`; return }
-  const who = esc(r.student_first_name || 'this student')
-  if (r.status === 'answered') { v.innerHTML = `<div class="card"><h2>Thank you</h2><p class="lede">Your answer about ${who} has been recorded.</p></div>`; return }
-  v.innerHTML = `<div class="grid g2"><section class="card stack">
-     <div class="eyebrow">Meet me through others</div>
-     <h1>${who} asked you for a short reference</h1>
-     <p class="lede">Hi ${esc(r.referee_name)}. ${who} listed you as their ${esc(r.relationship.toLowerCase())}. Please answer one question with a real example. It takes about three minutes.</p>
-     <div><label for="refans">Describe a specific moment when you saw ${who} show <b>${esc(r.skill_label.toLowerCase())}</b>. What did they do, and what changed as a result?</label>
-     <textarea id="refans" style="min-height:160px"></textarea></div>
-     <div class="row"><button class="primary" data-act="refsubmit" data-token="${esc(token)}">Send answer</button></div><p class="status" id="refst2"></p>
-   </section>
-   <section class="card stack"><h3>How your answer is used</h3>
-     <p class="hint">It appears in ${who}'s Skill Fingerprint labelled as peer feedback, with your first name and relationship. Employers see it next to the rest of their evidence. You can only answer once.</p></section></div>`
+function home() {
+  $('#nav').hidden = true; $('#stages').hidden = true; $('#who').innerHTML = ''
+  $('#view').innerHTML = `<section class="lp-hero">
+    <div><div class="eyebrow">Talent experience</div>
+      <h1>There is more to you than a CV.</h1>
+      <p class="lede">A Skill Fingerprint that grows with you: your CV, short lessons, contributions and job simulations, each labelled by where the evidence came from. Employers see anonymised evidence, not just a CV.</p>
+      <div class="row"><a class="btn primary" href="#start">Try it now</a><button data-act="scroll" data-to="how">How it works</button></div>
+    </div>
+    <canvas id="fph" width="560" height="560" aria-hidden="true"></canvas>
+  </section>
+  <section class="lp-sec" id="how"><div class="reveal"><div class="eyebrow">The journey</div><h2>From CV to interview in four steps</h2></div>
+    <div class="lp-steps">${JOURNEY.map(([n, name, text, live], i) => `<div class="card lp-step reveal ${live ? 'live' : 'flat'}" style="--i:${i + 1}">
+      <span class="n">${n}</span><h3>${name}</h3><p>${text}</p><span class="pill ok">Live now</span></div>`).join('')}</div>
+  </section>
+  <section class="lp-sec"><div class="reveal"><div class="eyebrow">Why it is different</div><h2>Evidence you can check, not a score</h2></div>
+    <div class="lp-points">
+      <div class="reveal" style="--i:1"><h3>Every skill has a source</h3><p>Each skill links back to the sentence in your CV, or the person or activity, it came from.</p></div>
+      <div class="reveal" style="--i:2"><h3>Labels you can trust</h3><p>An employer can tell what you wrote yourself from what others confirmed or what was assessed.</p></div>
+      <div class="reveal" style="--i:3"><h3>No overall score</h3><p>Your fingerprint is a multidimensional profile, never a single number or a hidden ranking.</p></div>
+    </div>
+  </section>
+  <section class="lp-sec"><div class="card stack lp-cta reveal"><h2>See your own fingerprint</h2><p class="lede">Start as a guest in a minute. Nothing leaves your browser.</p>
+    <a class="btn primary" href="#start">Try it now</a></div></section>`
+  heroDraw($('#fph'))
+  const io = 'IntersectionObserver' in window ? new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target) } }), { threshold: .15 }) : null
+  document.querySelectorAll('.reveal').forEach(el => io ? io.observe(el) : el.classList.add('in'))
 }
 
-// ---------- help ----------
-function setHelp(open) { $('#helppanel').hidden = !open; $('#helpbtn').setAttribute('aria-expanded', open) }
+// ---------- welcome / sign in ----------
+function welcome() {
+  $('#nav').hidden = true; $('#stages').hidden = true; $('#who').innerHTML = ''
+  $('#view').innerHTML = `<section class="hero">
+    <div><div class="eyebrow">Achievers</div>
+      <h1>Beyond what candidates say they can do.</h1>
+      <p class="lede">A Skill Fingerprint that grows with you: your CV and projects, short assessments, lessons, contributions and job simulations, each labelled by where the evidence came from. Employers see anonymised evidence, not just a CV.</p>
+      <ol class="stagelist">${STAGES.map(([n]) => `<li>${n}</li>`).join('')}</ol>
+    </div>
+    <div class="card stack">
+      ${db.cloudAvailable ? `<h2>Sign in or create an account</h2>
+      <div><label for="email">Email</label><input type="email" id="email" autocomplete="email"></div>
+      <div><label for="pw">Password <span class="opt">(8+ characters)</span></label><input type="password" id="pw" autocomplete="current-password"></div>
+      <div class="row"><button class="primary" data-act="signup">Create account</button><button data-act="signin">Log in</button></div>
+      <p class="status" id="authst"></p><hr>` : '<h2>Try it</h2><p class="hint">Accounts are not configured on this deployment, so data stays in this browser.</p>'}
+      <button data-act="guest">Try without an account</button>
+      <p class="hint">Without an account, data stays in this browser and referee links cannot be shared.</p>
+    </div></section>`
+}
+async function enter() { S.started = true; await loadMe(); route() }
+act('guest', async () => { db.useGuest(); await enter() })
+for (const kind of ['signup', 'signin']) act(kind, async el => {
+  const email = $('#email').value.trim(), pw = $('#pw').value
+  if (!email || pw.length < 8) return status('#authst', 'Enter your email and a password of at least 8 characters.', true)
+  el.disabled = true; status('#authst', spin + (kind === 'signup' ? 'Creating account…' : 'Logging in…'))
+  try {
+    if (kind === 'signup') { const r = await db.signUp(email, pw); if (!r.session) return status('#authst', 'Check your inbox to confirm your email, then log in.') }
+    else await db.signIn(email, pw)
+    await enter()
+  } catch (e) { status('#authst', esc(e.message), true) } finally { el.disabled = false }
+})
+act('signout', async () => { await db.signOut(); S.started = false; location.hash = ''; route() })
+act('copy', async el => { try { await navigator.clipboard.writeText(el.dataset.v); el.textContent = 'Copied' } catch { el.previousElementSibling?.select() } })
+
+// ---------- Help, scroll, light/dark theme ----------
+function setHelp(open) { const p = $('#helppanel'); if (!p) return; p.hidden = !open; $('#helpbtn').setAttribute('aria-expanded', open) }
+act('help', () => setHelp($('#helppanel').hidden))
+act('scroll', el => document.getElementById(el.dataset.to)?.scrollIntoView({ behavior: 'smooth' }))
+act('theme', () => {
+  const d = document.documentElement
+  d.dataset.theme = d.dataset.theme === 'dark' ? 'light' : 'dark'
+  try { localStorage.setItem('theme', d.dataset.theme) } catch {}
+  render() // canvases do not change colours by themselves, so redraw the page
+})
 document.addEventListener('click', e => { if (!e.target.closest('.help')) setHelp(false) })
 document.addEventListener('keydown', e => { if (e.key === 'Escape') setHelp(false) })
 
+// ---------- referee page (no account) ----------
+async function refereeView(token) {
+  $('#nav').hidden = true; $('#stages').hidden = true; $('#who').innerHTML = ''
+  const v = $('#view')
+  if (!db.sb) { v.innerHTML = `<div class="card"><h2>This link needs the online version</h2></div>`; return }
+  v.innerHTML = `<p class="status">${spin}Loading…</p>`
+  let r; try { r = await db.getRef(token) } catch { r = null }
+  if (!r) { v.innerHTML = `<div class="card"><h2>This link is not valid</h2><p class="hint">Ask the person who sent it for a new one.</p></div>`; return }
+  const who = esc(r.student_first_name || 'this student')
+  if (r.status === 'answered') { v.innerHTML = `<div class="card"><h2>Thank you</h2><p class="lede">Your feedback about ${who} has been recorded.</p></div>`; return }
+  v.innerHTML = `<div class="grid g2"><section class="card stack">
+     <div class="eyebrow">Meet me through others</div>
+     <h1>${who} asked for your feedback</h1>
+     <p class="lede">Hi ${esc(r.referee_name)}. ${who} listed you as a ${esc(r.relationship.toLowerCase())}${r.experience_title ? ` on <b>${esc(r.experience_title)}</b>` : ''}, and asked about their <b>${esc(r.skill_label.toLowerCase())}</b>. Please answer with specific observations.</p>
+     ${PROMPTS.map((p, i) => `<div><label for="rq${i}">${p}</label><textarea id="rq${i}" rows="3"></textarea></div>`).join('')}
+     <label class="toggle"><input type="checkbox" id="rconsent"><span>I agree that my first name, relationship and answer are shown in ${who}'s Skill Fingerprint.</span></label>
+     <div class="row"><button class="primary" data-act="refsubmit" data-token="${esc(token)}">Send feedback</button></div><p class="status" id="refst"></p>
+   </section>
+   <section class="card stack"><h3>How your answer is used</h3><p class="hint">It is labelled as contextual feedback and linked to the experience above. Employers see it next to the rest of ${who}'s evidence. You can only answer once.</p></section></div>`
+}
+act('refsubmit', async el => {
+  const parts = PROMPTS.map((p, i) => [p, $('#rq' + i).value.trim()]).filter(([, a]) => a)
+  const text = parts.map(([p, a]) => `${p} ${a}`).join(' ')
+  if (text.length < 40) return status('#refst', 'Please answer at least one question with a real example.', true)
+  if (!$('#rconsent').checked) return status('#refst', 'Please confirm consent to share your answer.', true)
+  el.disabled = true
+  try { const ok = await db.submitRef(el.dataset.token, text); if (!ok) return status('#refst', 'This request was already answered.', true); $('#view').innerHTML = `<div class="card"><h2>Thank you</h2><p class="lede">Your feedback has been recorded.</p></div>` }
+  catch (e) { status('#refst', esc(e.message), true); el.disabled = false }
+})
+
 // ---------- events ----------
 document.addEventListener('click', async e => {
-  const t = e.target.closest('[data-act]'); if (!t) return
-  const a = t.dataset.act
-  try {
-    if (a === 'theme') {
-      const d = document.documentElement
-      d.dataset.theme = d.dataset.theme === 'dark' ? 'light' : 'dark'
-      try { localStorage.setItem('theme', d.dataset.theme) } catch {}
-      drawFingerprint(); drawFingerprint($('#fph'), demoEvidence(), 'achievers') // canvas does not change colours by itself
-      return
-    }
-    if (a === 'scroll') return document.getElementById(t.dataset.to)?.scrollIntoView({ behavior: 'smooth' })
-    if (a === 'guest') { store.useGuest(); return enter() }
-    if (a === 'signup' || a === 'signin') {
-      const email = $('#email').value.trim(), pw = $('#pw').value, st = $('#authst')
-      if (!email || pw.length < 8) return status(st, 'Enter your email and a password of at least 8 characters.', true)
-      t.disabled = true; status(st, '<span class="spin"></span>' + (a === 'signup' ? 'Creating account…' : 'Logging in…'))
-      try {
-        if (a === 'signup') { const r = await store.signUp(email, pw); if (!r.session) { status(st, 'Check your inbox to confirm your email, then log in.'); return } }
-        else await store.signIn(email, pw)
-        return enter()
-      } catch (err) { status(st, esc(err.message), true) } finally { t.disabled = false }
-      return
-    }
-    if (a === 'toauth' || a === 'signout') { await store.signOut(); started = false; location.hash = ''; return route() }
-    if (a === 'build') return build(t)
-    if (a === 'addref') {
-      const name = $('#rname').value.trim(), st = $('#refst')
-      if (!name) { $('#rname').focus(); return status(st, 'Add their name first.', true) }
-      const sk = SKILLS[$('#rskill').value]
-      await store.createRef({ referee_name: name, relationship: $('#rrel').value, skill_id: sk.id, skill_label: sk.name, student_first_name: firstName() })
-      await refresh(); $('#refs').innerHTML = refsHtml(); return
-    }
-    if (a === 'guestans') {
-      const v = $('#ga-' + t.dataset.id).value.trim(); if (v.length < 20) return
-      await store.answerGuestRef(t.dataset.id, v); await refresh(); $('#refs').innerHTML = refsHtml(); return
-    }
-    if (a === 'copy') { try { await navigator.clipboard.writeText(t.dataset.v); t.textContent = 'Copied' } catch { t.previousElementSibling.select() } return }
-    if (a === 'askref') { location.hash = '#register'; setTimeout(() => { const s = $('#rskill'); if (s) { s.value = t.dataset.id; $('#refs').scrollIntoView({ behavior: 'smooth' }); $('#rname').focus() } }, 50); return }
-    if (a === 'toggle') { const id = t.dataset.id; open.has(id) ? open.delete(id) : open.add(id); $('#view').innerHTML = fingerprintHtml(); drawFingerprint(); return }
-    if (a === 'cogprev' || a === 'cognext') { cogStep += a === 'cognext' ? 1 : -1; $('#cogbox').innerHTML = cogHtml(); return }
-    if (a === 'help') return setHelp($('#helppanel').hidden)
-    if (a === 'cog') {
-      let score = 0; const r = {}
-      COG.forEach((q, i) => { r['a' + i] = cogAns[i]; if (cogAns[i] === q.a) score++ })
-      r.done = true; r.score = score
-      await store.saveProfile({ reasoning: r }); D.profile.reasoning = r
-      for (const ab of [...new Set(COG.map(q => q.ab))]) {
-        const items = COG.map((q, i) => [q, i]).filter(([q]) => q.ab === ab)
-        const right = items.filter(([q, i]) => r['a' + i] === q.a).length
-        await store.setEvidence({ source: 'assessed', title: 'Reasoning check · ' + SKILLS[ab].name, skill_id: right ? ab : null, detail: `Answered ${right} of ${items.length} ${SKILLS[ab].name.toLowerCase()} questions correctly.`, level: right === items.length ? 3 : 2 })
-      }
-      await refresh(); status($('#cogst'), `Done: ${score}/${COG.length} correct · added to your fingerprint`); return
-    }
-    if (a === 'refsubmit') {
-      const v = $('#refans').value.trim(), st = $('#refst2')
-      if (v.length < 20) return status(st, 'Please write at least a couple of sentences with a real example.', true)
-      t.disabled = true
-      const ok = await store.submitRef(t.dataset.token, v)
-      if (!ok) return status(st, 'This request was already answered.', true)
-      $('#view').innerHTML = `<div class="card"><h2>Thank you</h2><p class="lede">Your answer has been recorded.</p></div>`; return
-    }
-  } catch (err) { console.error(err); alert(err.message || String(err)) }
+  const t = e.target.closest('[data-act]'); if (!t || !actions[t.dataset.act]) return
+  if (t.tagName === 'A') e.preventDefault()
+  try { await actions[t.dataset.act](t, e) } catch (err) { console.error(err); toast(err.message || String(err), true) }
 })
 document.addEventListener('change', async e => {
-  if (e.target.name === 'cogq') cogAns[cogStep] = +e.target.value
-  if (e.target.id === 'role2') { await store.saveProfile({ target_role: e.target.value }); D.profile.target_role = e.target.value; route() }
-  if (e.target.id === 'showall') { showAll = e.target.checked; $('#view').innerHTML = fingerprintHtml(); drawFingerprint() }
+  const t = e.target.closest('[data-change]'); if (!t || !actions[t.dataset.change]) return
+  try { await actions[t.dataset.change](t, e) } catch (err) { console.error(err); toast(err.message || String(err), true) }
 })
+document.addEventListener('input', e => { if (e.target.closest('[data-change="g-alloc"]')) actions['g-alloc']?.() })
 
 // ---------- boot ----------
 ;(async () => {
-  const session = await store.initAuth().catch(() => null)
-  if (session) { started = true; await refresh() }
+  const session = await db.initAuth().catch(() => null)
+  if (session) { S.started = true; await loadMe().catch(e => toast(e.message, true)) }
   route()
 })()

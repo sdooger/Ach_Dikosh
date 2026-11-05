@@ -1,6 +1,11 @@
-# Achievers — Step 1: Skill Fingerprint
+# Achievers — talent platform prototype
 
-Students upload a CV, the app matches it to a skills taxonomy (no AI, every match traceable to a sentence), shows a skill tree against a target role, and collects peer evidence through referee links ("Meet me through others").
+All four stages, with a Candidate / Employer switch:
+
+1. **Register / Discover** — onboarding, CV upload with editable extraction, experience showcase, Big Five (illustrative) and reasoning questions, Skill Fingerprint with evidence labels, privacy settings, "Load Maya's example".
+2. **Develop & Express** — topic Marketplace with structured contributions and replies, Learning Hub with knowledge checks and a one-free-course-a-month rule, Meet me through others (referee links).
+3. **Demonstrate** — apply or accept an invitation, individual profit-decline simulation (randomised values, auto-scored steps, human review for the written part), group supply-chain simulation with scripted demo participants.
+4. **Connect** — talent discovery, job posting with assessment settings, anonymous mini-CV, pipeline with 8 statuses, side-by-side comparison, assessment reports with human evaluation, interview invitations.
 
 Stack: Vite (plain JavaScript) · Supabase (auth, Postgres, file storage) · Netlify (hosting).
 
@@ -16,7 +21,7 @@ npm run dev
 
 ### 1. Supabase
 1. Create a project at supabase.com (free tier).
-2. **SQL Editor → New query** → paste `supabase/schema.sql` → **Run**.
+2. **SQL Editor → New query** → paste `supabase/schema.sql` → **Run**. Then a new query with `supabase/schema_v2.sql` → **Run**.
 3. **Authentication → Providers → Email**: for the demo, turn **Confirm email** off so sign-up logs people in immediately.
 4. **Project Settings → API**: copy the **Project URL** and the **anon public** key.
 
