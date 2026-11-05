@@ -7,10 +7,19 @@ import { marketplace, topicPage, learning, coursePage, feedbackPage, PROMPTS } f
 import { applyPage, jobPage, challengePage, groupPage, leaveChallenge } from './apply.js'
 import { discoverPage, jobsPage, assessPage, jobPipeline, comparePage, candidatePage, topicsAdmin, companyPage } from './employer.js'
 
-const STAGES = [['Register / Discover', '#discover', 'candidate'], ['Develop & Express', '#develop', 'candidate'], ['Demonstrate', '#apply', 'candidate'], ['Connect', '#e-discover', 'employer']]
-const CAND_NAV = [['#discover', 'Discover'], ['#develop', 'Develop'], ['#apply', 'Apply'], ['#activities', 'My Activities'], ['#profile', 'My Profile']]
-const EMP_NAV = [['#e-discover', 'Talent Discovery'], ['#e-jobs', 'Job Openings'], ['#e-assess', 'Assessments'], ['#e-company', 'Company']]
-
+// ---------- navigation: four stages, one small tab row per stage ----------
+const STAGES = [
+  ['Build', '#onboard'],
+  ['Develop', '#develop'],
+  ['Demonstrate', '#apply'],
+  ['Connect', '#e-discover'],
+]
+const SUBNAV = [
+  [['#onboard', 'Add evidence'], ['#discover', 'Skill Fingerprint'], ['#profile', 'Profile'], ['#activities', 'Activities']],
+  [['#develop', 'Topics'], ['#develop/learn', 'Learning Hub'], ['#develop/feedback', 'Feedback']],
+  [],
+  [['#e-discover', 'Talent discovery'], ['#e-jobs', 'Job openings'], ['#e-assess', 'Assessments'], ['#e-company', 'Company']],
+]
 function stageOf(h) {
   if (h.startsWith('e-')) return 3
   if (/^(apply|job|challenge|group)/.test(h)) return 2
@@ -27,9 +36,10 @@ async function route() {
   if (!path.startsWith('challenge/') && !path.startsWith('group/')) leaveChallenge()
   if (path.startsWith('ref/')) return refereeView(path.slice(4))
   if (!S.started) return path === 'start' ? welcome() : home()
-  if (path === 'start' || path === 'home') path = ''
+  if (path === 'home') return home()
+  if (path === 'start') path = ''
+  // Connect is the employer side of the same demo; every other stage is the candidate side
   const wantEmp = path.startsWith('e-')
-  // topic pages are shared by both views
   if (path && !path.startsWith('topic/') && wantEmp !== (S.view === 'employer')) await switchView(wantEmp ? 'employer' : 'candidate', false)
   shell(path)
   if (!path) return go(S.view === 'employer' ? '#e-discover' : (S.profile.onboarding || 0) >= 4 ? '#discover' : '#onboard')
@@ -57,9 +67,11 @@ async function route() {
       case 'e-cand': html = await candidatePage(decodeURIComponent(b), params); break
       case 'e-topics': html = await topicsAdmin(); break
       case 'e-company': html = companyPage(); break
-      default: html = `<div class="card"><h2>Page not found</h2><a href="#discover">Go to my fingerprint</a></div>`
+      default: html = `<div class="card stack"><h2>Page not found</h2><a class="btn" href="#discover">Go to my fingerprint</a></div>`
     }
     view.innerHTML = html
+    // work-style sliders glide instead of jumping between five positions
+    view.querySelectorAll('input[type=range]').forEach(r => { const s = r.getAttribute('step'); if (!s || s === '1') r.step = '0.05' })
     if (a === 'onboard') bindOnboard()
     if (a === 'discover') drawFingerprint()
     if (a === 'group') { const m = $('#msgs'); if (m) m.scrollTop = m.scrollHeight; actions['g-alloc']?.() }
@@ -69,37 +81,46 @@ async function route() {
   }
 }
 setRender(() => { const y = window.scrollY; route().then(() => window.scrollTo(0, y)) })
-let lastHash = null
 window.addEventListener('hashchange', () => {
   setHelp(false)
   route(); window.scrollTo(0, 0)
-  if (location.hash !== lastHash) { lastHash = location.hash; const v = $('#view'); v.classList.remove('enter'); void v.offsetWidth; v.classList.add('enter') }
+  const v = $('#view'); v.classList.remove('enter'); void v.offsetWidth; v.classList.add('enter')
 })
 
-function shell(path) {
-  const emp = S.view === 'employer', items = emp ? EMP_NAV : CAND_NAV
-  const st = stageOf(path)
+function whoHtml() {
+  return db.currentMode() === 'cloud'
+    ? '<button class="ghost" data-act="signout">Sign out</button>'
+    : `<span class="pill">Guest · saved in this browser</span>${db.cloudAvailable ? '<button class="ghost" data-act="signout">Exit</button>' : ''}`
+}
+function shell(path, landing = false) {
+  const st = landing ? -1 : stageOf(path)
   $('#nav').hidden = false
-  $('#nav').innerHTML = items.map(([h, n]) => `<a href="${h}" ${('#' + path).startsWith(h) || (h === '#discover' && path === 'onboard') ? 'aria-current="page"' : ''}>${n}</a>`).join('')
-  $('#who').innerHTML = `<div class="switch" role="group" aria-label="View"><button data-act="view" data-v="candidate" aria-pressed="${!emp}">Candidate</button><button data-act="view" data-v="employer" aria-pressed="${emp}">Employer</button></div>
-    ${db.currentMode() === 'cloud' ? '<button class="ghost" data-act="signout">Sign out</button>' : `<span class="pill">Guest</span>${db.cloudAvailable ? '<button class="ghost" data-act="signout">Exit</button>' : ''}`}`
-  $('#stages').hidden = false
-  $('#stages').innerHTML = `<div class="wrap">${STAGES.map(([n, h], i) => `<a href="${h}" class="${i === st ? 'on' : ''}"><b>${i + 1}</b>${n}</a>`).join('')}</div>`
+  $('#nav').innerHTML = STAGES.map(([n, h], i) => `<a href="${h}" ${i === st ? 'aria-current="page"' : ''}><b>${i + 1}</b>${n}</a>`).join('')
+  $('#who').innerHTML = whoHtml()
+  const items = st >= 0 ? SUBNAV[st] : []
+  const sub = $('#subnav')
+  sub.hidden = !items.length
+  if (items.length) {
+    const here = '#' + path
+    // the longest matching tab is the current one (so #develop does not also light up #develop/learn)
+    const cur = items.map(([h]) => h).filter(h => here === h || here.startsWith(h + '/') || (h === '#develop' && /^#(topic|course)\//.test(here)) || (h === '#e-discover' && /^#e-(cand|compare)\//.test(here)) || (h === '#e-jobs' && /^#e-job\//.test(here)))
+      .sort((a, b) => b.length - a.length)[0]
+    sub.innerHTML = `<div class="wrap">${items.map(([h, n]) => `<a href="${h}" ${h === cur ? 'aria-current="page"' : ''}>${n}</a>`).join('')}</div>`
+  }
 }
 async function switchView(v, navigate = true) {
   setView(v)
   await loadMe()
   if (v === 'employer' && !S.profile.is_recruiter) { await db.saveProfile({ is_recruiter: true }); S.profile.is_recruiter = true }
-  if (navigate) { toast(v === 'employer' ? 'Employer view' : 'Candidate view'); go(v === 'employer' ? '#e-discover' : '#discover') }
+  if (navigate) go(v === 'employer' ? '#e-discover' : '#discover')
 }
-act('view', el => switchView(el.dataset.v))
 
-// ---------- landing (before sign-in) ----------
+// ---------- landing (the page the logo leads to) ----------
 const JOURNEY = [
-  ['1', 'Register / Discover', "Upload your CV. It is matched to Canada's OaSIS skills taxonomy, and people who worked with you add what they saw.", true],
-  ['2', 'Develop & Express', 'Respond to real business topics and take short lessons from companies and universities. Your contributions make you visible.', true],
-  ['3', 'Demonstrate', 'Apply to roles and take realistic job simulations that show how you reason and decide, alone or in a group.', true],
-  ['4', 'Connect', 'Employers see anonymised, standardised profiles first, then meet the people who fit. People decide, not an automated ranking.', true],
+  ['1', 'Build', "Upload your CV. It is matched to Canada's OaSIS skills taxonomy, and people who worked with you add what they saw."],
+  ['2', 'Develop', 'Answer real business topics and take short lessons from companies and universities. Your contributions make you visible.'],
+  ['3', 'Demonstrate', 'Apply to roles and take realistic job simulations that show how you reason and decide, alone or in a group.'],
+  ['4', 'Connect', 'Employers see anonymised, standardised profiles first, then meet the people who fit. People decide, not an automated ranking.'],
 ]
 function heroDraw(c) {
   if (!c) return
@@ -107,7 +128,7 @@ function heroDraw(c) {
   let i = 0
   const bands = taxonomy.categories.flatMap(cat => cat.subcategories).filter(s => s.skills.length).map(s => {
     let sum = 0; const by = {}
-    for (const k of s.skills) if (++i % 3) { sum += 1 + (i % 3); const src = i % 11 === 0 ? 'peer' : i % 7 === 0 ? 'assessed' : 'imported'; by[src] = (by[src] || 0) + 1 }
+    for (const k of s.skills) if (++i % 3) { sum += 1 + (i % 3); const src = i % 11 === 0 ? 'peer' : i % 7 === 0 ? 'assessed' : 'cv'; by[src] = (by[src] || 0) + 1 }
     const top = Object.keys(by).sort((a, b) => ['peer', 'assessed'].includes(b) - ['peer', 'assessed'].includes(a) || by[b] - by[a])[0]
     return { p: sum / (s.skills.length * 5), col: css.getPropertyValue(top ? '--s-' + top : '--line').trim() }
   })
@@ -131,17 +152,19 @@ function heroDraw(c) {
   x.globalAlpha = 1
 }
 function home() {
-  $('#nav').hidden = true; $('#stages').hidden = true; $('#who').innerHTML = ''
+  if (S.started) shell('', true); else { $('#nav').hidden = true; $('#subnav').hidden = true; $('#who').innerHTML = '' }
+  const cta = S.started ? ((S.profile.onboarding || 0) >= 4 ? '#discover' : '#onboard') : '#start'
+  const label = S.started ? 'Continue' : 'Try it now'
   $('#view').innerHTML = `<section class="lp-hero">
     <div><div class="eyebrow">Talent experience</div>
       <h1>There is more to you than a CV.</h1>
       <p class="lede">A Skill Fingerprint that grows with you: your CV, short lessons, contributions and job simulations, each labelled by where the evidence came from. Employers see anonymised evidence, not just a CV.</p>
-      <div class="row"><a class="btn primary" href="#start">Try it now</a><button data-act="scroll" data-to="how">How it works</button></div>
+      <div class="row"><a class="btn primary" href="${cta}">${label}</a><button data-act="scroll" data-to="how">How it works</button></div>
     </div>
     <canvas id="fph" width="560" height="560" aria-hidden="true"></canvas>
   </section>
   <section class="lp-sec" id="how"><div class="reveal"><div class="eyebrow">The journey</div><h2>From CV to interview in four steps</h2></div>
-    <div class="lp-steps">${JOURNEY.map(([n, name, text, live], i) => `<div class="card lp-step reveal ${live ? 'live' : 'flat'}" style="--i:${i + 1}">
+    <div class="lp-steps">${JOURNEY.map(([n, name, text], i) => `<div class="card lp-step reveal live" style="--i:${i + 1}">
       <span class="n">${n}</span><h3>${name}</h3><p>${text}</p><span class="pill ok">Live now</span></div>`).join('')}</div>
   </section>
   <section class="lp-sec"><div class="reveal"><div class="eyebrow">Why it is different</div><h2>Evidence you can check, not a score</h2></div>
@@ -152,29 +175,23 @@ function home() {
     </div>
   </section>
   <section class="lp-sec"><div class="card stack lp-cta reveal"><h2>See your own fingerprint</h2><p class="lede">Start as a guest in a minute. Nothing leaves your browser.</p>
-    <a class="btn primary" href="#start">Try it now</a></div></section>`
+    <a class="btn primary" href="${cta}">${label}</a></div></section>`
   heroDraw($('#fph'))
   const io = 'IntersectionObserver' in window ? new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target) } }), { threshold: .15 }) : null
   document.querySelectorAll('.reveal').forEach(el => io ? io.observe(el) : el.classList.add('in'))
 }
 
-// ---------- welcome / sign in ----------
+// ---------- sign in ----------
 function welcome() {
-  $('#nav').hidden = true; $('#stages').hidden = true; $('#who').innerHTML = ''
-  $('#view').innerHTML = `<section class="hero">
-    <div><div class="eyebrow">Achievers</div>
-      <h1>Beyond what candidates say they can do.</h1>
-      <p class="lede">A Skill Fingerprint that grows with you: your CV and projects, short assessments, lessons, contributions and job simulations, each labelled by where the evidence came from. Employers see anonymised evidence, not just a CV.</p>
-      <ol class="stagelist">${STAGES.map(([n]) => `<li>${n}</li>`).join('')}</ol>
-    </div>
-    <div class="card stack">
-      ${db.cloudAvailable ? `<h2>Sign in or create an account</h2>
+  $('#nav').hidden = true; $('#subnav').hidden = true; $('#who').innerHTML = ''
+  $('#view').innerHTML = `<section class="auth"><div class="card stack">
+      ${db.cloudAvailable ? `<h2>Create your account</h2>
       <div><label for="email">Email</label><input type="email" id="email" autocomplete="email"></div>
       <div><label for="pw">Password <span class="opt">(8+ characters)</span></label><input type="password" id="pw" autocomplete="current-password"></div>
       <div class="row"><button class="primary" data-act="signup">Create account</button><button data-act="signin">Log in</button></div>
-      <p class="status" id="authst"></p><hr>` : '<h2>Try it</h2><p class="hint">Accounts are not configured on this deployment, so data stays in this browser.</p>'}
-      <button data-act="guest">Try without an account</button>
-      <p class="hint">Without an account, data stays in this browser and referee links cannot be shared.</p>
+      <p class="status" id="authst"></p><hr>` : `<h2>Try it now</h2><p class="hint">Accounts are not configured on this deployment yet, so your data stays in this browser.</p>`}
+      <button data-act="guest">Continue as guest</button>
+      <p class="hint">Guest data stays in this browser only. Referee links need an account.</p>
     </div></section>`
 }
 async function enter() { S.started = true; await loadMe(); route() }
@@ -200,14 +217,14 @@ act('theme', () => {
   const d = document.documentElement
   d.dataset.theme = d.dataset.theme === 'dark' ? 'light' : 'dark'
   try { localStorage.setItem('theme', d.dataset.theme) } catch {}
-  render() // canvases do not change colours by themselves, so redraw the page
+  render() // canvases do not change colour by themselves, so redraw the page
 })
 document.addEventListener('click', e => { if (!e.target.closest('.help')) setHelp(false) })
 document.addEventListener('keydown', e => { if (e.key === 'Escape') setHelp(false) })
 
 // ---------- referee page (no account) ----------
 async function refereeView(token) {
-  $('#nav').hidden = true; $('#stages').hidden = true; $('#who').innerHTML = ''
+  $('#nav').hidden = true; $('#subnav').hidden = true; $('#who').innerHTML = ''
   const v = $('#view')
   if (!db.sb) { v.innerHTML = `<div class="card"><h2>This link needs the online version</h2></div>`; return }
   v.innerHTML = `<p class="status">${spin}Loading…</p>`
