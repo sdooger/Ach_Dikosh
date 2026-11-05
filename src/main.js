@@ -41,8 +41,9 @@ async function refresh() { D = await store.loadAll() }
 let lastHash = null
 async function route() {
   const h = location.hash.slice(1)
+  $('.help').hidden = h.startsWith('ref/')
   if (h !== lastHash) { // new page: back to the top, fade the view in
-    lastHash = h; scrollTo({ top: 0, behavior: 'instant' })
+    lastHash = h; setHelp(false); scrollTo({ top: 0, behavior: 'instant' })
     const v = $('#view'); v.classList.remove('enter'); void v.offsetWidth; v.classList.add('enter')
   }
   if (h.startsWith('ref/')) return refereeView(h.slice(4))
@@ -67,7 +68,7 @@ async function renderWho() {
 
 // ---------- landing ----------
 const JOURNEY = [
-  ['1', 'Register', "Upload your CV. It is matched to Canada's OaSIS skills taxonomy, and people who worked with you add what they saw.", true],
+  ['1', 'Build', "Upload your CV. It is matched to Canada's OaSIS skills taxonomy, and people who worked with you add what they saw.", true],
   ['2', 'Develop', 'Answer real questions from companies and take short lessons. Your contributions grow your fingerprint.', false],
   ['3', 'Demonstrate', 'Job-relevant challenges that show how you solve problems, alone or in a group.', false],
   ['4', 'Connect', 'Employers compare anonymised, standardised profiles side by side. People decide, not an automated ranking.', false],
@@ -123,13 +124,24 @@ function welcome() {
 }
 async function enter() { started = true; await refresh(); location.hash = D.cv || D.evidence.length ? '#fingerprint' : '#register'; route() }
 
-// ---------- register ----------
+// ---------- add evidence ----------
+let cogStep = 0, cogAns = null
+function cogHtml() {
+  const rz = D.profile.reasoning || {}
+  cogAns = cogAns || Object.fromEntries(COG.map((_, i) => [i, rz['a' + i] ?? null]))
+  const q = COG[cogStep], last = cogStep === COG.length - 1
+  return `<div class="row between"><h2>Reasoning check</h2><span class="pill">Optional · ${cogStep + 1} of ${COG.length}</span></div>
+   <p class="hint">Two short questions for each of three OaSIS cognitive abilities. Correct answers add assessed evidence.</p>
+   <div class="q"><div style="font-size:14px">${cogStep + 1}. ${q.q}</div><div class="opts">${q.o.map((o, j) => `<label><input type="radio" name="cogq" value="${j}" ${cogAns[cogStep] === j ? 'checked' : ''}><span>${o}</span></label>`).join('')}</div></div>
+   <div class="row" style="margin-top:auto"><button data-act="cogprev" ${cogStep ? '' : 'disabled'}>Back</button>${last ? '<button class="primary" data-act="cog">Submit answers</button>' : '<button data-act="cognext">Next</button>'}</div>
+   <p class="status" id="cogst">${rz.done ? `Done: ${rz.score}/${COG.length} correct` : ''}</p>`
+}
 function registerHtml() {
-  const p = D.profile, st = p.work_style || {}, rz = p.reasoning || {}
-  return `<div class="head"><div><div class="eyebrow">Step 1 · Register</div><h1>Build your Skill Fingerprint</h1>
+  const p = D.profile, st = p.work_style || {}
+  cogStep = 0; cogAns = null
+  return `<div class="head"><div><div class="eyebrow">Step 1 · Add evidence</div><h1>Build your Skill Fingerprint</h1>
     <p class="lede">Several sources of evidence, each keeping its label, so an employer can tell what you wrote yourself from what someone else confirmed.</p></div></div>
   <div class="grid g2">
-   <div class="stack">
     <section class="card stack">
       <div class="row between"><h2>Your CV</h2><span class="pill">Required</span></div>
       <div class="drop" id="drop" tabindex="0" role="button" aria-label="Upload CV file"><strong>Drop your CV here or click to upload</strong><span class="hint">PDF, Word (.docx) or .txt${D.cv ? ` · current: ${esc(D.cv.file_name)}` : ''}</span><input type="file" id="file" accept=".pdf,.docx,.txt,.md" hidden></div>
@@ -141,24 +153,20 @@ function registerHtml() {
       <div><label for="target">Target role</label><select id="target">${roles.roles.map(r => `<option value="${r.id}" ${p.target_role === r.id ? 'selected' : ''}>${esc(r.name)}</option>`).join('')}</select></div>
       <div><label for="notes">A moment that shows how you work</label><textarea id="notes" placeholder="What was the situation, what did you do, and what changed?">${esc(p.notes)}</textarea></div>
       <div><label for="projects">Projects, portfolio, volunteering <span class="opt">(optional, one per line)</span></label><textarea id="projects" style="min-height:80px">${esc(p.projects)}</textarea></div>
-      <div class="row"><button class="primary" data-act="build">Build my Skill Fingerprint</button></div>
+      <div class="row" style="margin-top:auto"><button class="primary" data-act="build">Build my Skill Fingerprint</button></div>
       <p class="status" id="buildst"></p>
     </section>
-   </div>
-   <div class="stack">
+  </div>
+  <div class="row between sectionhead"><h2>Strengthen your fingerprint</h2><span class="pill">Optional · add any time</span></div>
+  <div class="grid g3">
     <section class="card stack" id="refs">${refsHtml()}</section>
     <section class="card stack">
-      <div class="row between"><h2>Work style</h2><span class="pill">Optional · self-reported</span></div>
+      <div class="row between"><h2>Work style</h2><span class="pill">Self-reported</span></div>
       <p class="hint">Inspired by Big Five dimensions. It describes how you like to work and is never turned into a score.</p>
       ${STYLE.map(([k, a, b]) => `<div class="slider"><span>${a}</span><input type="range" min="1" max="5" value="${st[k] || 3}" data-style="${k}" aria-label="${a} or ${b}"><span>${b}</span></div>`).join('')}
     </section>
-    <section class="card stack">
-      <div class="row between"><h2>Reasoning check</h2><span class="pill">Optional · 6 questions</span></div>
-      <p class="hint">Two short questions each for three OaSIS cognitive abilities: inductive reasoning, deductive reasoning and mathematical reasoning. Correct answers add assessed evidence.</p>
-      ${COG.map((q, i) => `<div class="q"><div style="font-size:14px">${i + 1}. ${q.q}</div><div class="opts">${q.o.map((o, j) => `<label><input type="radio" name="cog${i}" value="${j}" ${rz['a' + i] === j ? 'checked' : ''}><span>${o}</span></label>`).join('')}</div></div>`).join('')}
-      <div class="row"><button data-act="cog">Submit answers</button></div><p class="status" id="cogst">${rz.done ? `Done: ${rz.score}/${COG.length} correct` : ''}</p>
-    </section>
-   </div></div>`
+    <section class="card stack" id="cogbox">${cogHtml()}</section>
+  </div>`
 }
 function refLink(r) { return `${location.origin}${location.pathname}#ref/${r.token}` }
 function refsHtml() {
@@ -335,6 +343,11 @@ async function refereeView(token) {
      <p class="hint">It appears in ${who}'s Skill Fingerprint labelled as peer feedback, with your first name and relationship. Employers see it next to the rest of their evidence. You can only answer once.</p></section></div>`
 }
 
+// ---------- help ----------
+function setHelp(open) { $('#helppanel').hidden = !open; $('#helpbtn').setAttribute('aria-expanded', open) }
+document.addEventListener('click', e => { if (!e.target.closest('.help')) setHelp(false) })
+document.addEventListener('keydown', e => { if (e.key === 'Escape') setHelp(false) })
+
 // ---------- events ----------
 document.addEventListener('click', async e => {
   const t = e.target.closest('[data-act]'); if (!t) return
@@ -369,9 +382,11 @@ document.addEventListener('click', async e => {
     if (a === 'copy') { try { await navigator.clipboard.writeText(t.dataset.v); t.textContent = 'Copied' } catch { t.previousElementSibling.select() } return }
     if (a === 'askref') { location.hash = '#register'; setTimeout(() => { const s = $('#rskill'); if (s) { s.value = t.dataset.id; $('#refs').scrollIntoView({ behavior: 'smooth' }); $('#rname').focus() } }, 50); return }
     if (a === 'toggle') { const id = t.dataset.id; open.has(id) ? open.delete(id) : open.add(id); $('#view').innerHTML = fingerprintHtml(); drawFingerprint(); return }
+    if (a === 'cogprev' || a === 'cognext') { cogStep += a === 'cognext' ? 1 : -1; $('#cogbox').innerHTML = cogHtml(); return }
+    if (a === 'help') return setHelp($('#helppanel').hidden)
     if (a === 'cog') {
       let score = 0; const r = {}
-      COG.forEach((q, i) => { const v = document.querySelector(`input[name=cog${i}]:checked`); r['a' + i] = v ? +v.value : null; if (v && +v.value === q.a) score++ })
+      COG.forEach((q, i) => { r['a' + i] = cogAns[i]; if (cogAns[i] === q.a) score++ })
       r.done = true; r.score = score
       await store.saveProfile({ reasoning: r }); D.profile.reasoning = r
       for (const ab of [...new Set(COG.map(q => q.ab))]) {
@@ -392,6 +407,7 @@ document.addEventListener('click', async e => {
   } catch (err) { console.error(err); alert(err.message || String(err)) }
 })
 document.addEventListener('change', async e => {
+  if (e.target.name === 'cogq') cogAns[cogStep] = +e.target.value
   if (e.target.id === 'role2') { await store.saveProfile({ target_role: e.target.value }); D.profile.target_role = e.target.value; route() }
   if (e.target.id === 'showall') { showAll = e.target.checked; $('#view').innerHTML = fingerprintHtml(); drawFingerprint() }
 })
