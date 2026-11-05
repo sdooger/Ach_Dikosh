@@ -25,8 +25,26 @@ a{color:var(--accent)}
 .wrap{max-width:1140px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
 header{position:sticky;top:0;z-index:5;background:var(--surface);border-bottom:1px solid var(--line)}
 .bar{display:flex;align-items:center;gap:16px;padding-block:10px;flex-wrap:wrap}
-.brand{font-family:var(--font-display);font-weight:700;font-size:20px;letter-spacing:-.01em;display:flex;align-items:center;gap:2px;color:var(--ink);text-decoration:none;line-height:1}
-.brand img{height:38px;width:auto;display:block;margin-right:-2px}
+.brand {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 20px;
+    letter-spacing: -.01em;
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    color: var(--ink);
+    text-decoration: none;
+    line-height: 1;
+}
+
+.brand img {
+    height: 38px;
+    width: auto;
+    display: block;
+    margin-right: -2px;
+    transform: translateY(-2px);
+}
 :root[data-theme="dark"] .logo-light{display:none}
 :root:not([data-theme="dark"]) .logo-dark{display:none}
 nav.steps{display:flex;gap:4px;flex:1;flex-wrap:wrap;min-width:0;align-items:center}
