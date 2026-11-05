@@ -5,13 +5,15 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <title>Achievers</title>
   <meta name="description" content="Build an evidence-based Skill Fingerprint from your CV and the people you have worked with.">
+  <link rel="icon" type="image/png" href="/logo-light.png">
+  <script>try{document.documentElement.dataset.theme=localStorage.getItem('theme')||'light'}catch(e){}</script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
   <link rel="stylesheet" href="/src/style.css">
 </head>
 <body>
   <header><div class="wrap bar">
-    <a class="brand" href="#home"><i aria-hidden="true"></i>Achievers</a>
+    <a class="brand" href="#home"><img class="logo-light" src="/logo-light.png" alt="" width="26" height="30"><img class="logo-dark" src="/logo-dark.png" alt="" width="26" height="30">Achievers</a>
     <nav class="steps">
       <span id="nav" hidden><a href="#register">Add evidence</a><a href="#fingerprint">Skill Fingerprint</a></span>
       <div class="help">
@@ -28,6 +30,7 @@
         </div>
       </div>
     </nav>
+    <button class="navbtn theme" data-act="theme" aria-label="Switch between light and dark theme" title="Light / dark theme">◐</button>
     <div class="who" id="who"></div>
   </div></header>
   <main class="wrap" id="view"></main>

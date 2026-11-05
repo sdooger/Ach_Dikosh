@@ -69,9 +69,9 @@ async function renderWho() {
 // ---------- landing ----------
 const JOURNEY = [
   ['1', 'Build', "Upload your CV. It is matched to Canada's OaSIS skills taxonomy, and people who worked with you add what they saw.", true],
-  ['2', 'Develop', 'Answer real questions from companies and take short lessons. Your contributions grow your fingerprint.', false],
-  ['3', 'Demonstrate', 'Job-relevant challenges that show how you solve problems, alone or in a group.', false],
-  ['4', 'Connect', 'Employers compare anonymised, standardised profiles side by side. People decide, not an automated ranking.', false],
+  ['2', 'Develop', 'Respond to real business topics and take short lessons from companies and universities. Your contributions make you visible and grow your fingerprint.', false],
+  ['3', 'Demonstrate', 'Realistic job challenges that show how you reason and decide, alone or in a group.', false],
+  ['4', 'Connect', 'Employers see anonymised, standardised profiles first, then meet the people who fit. People decide, not an automated ranking.', false],
 ]
 // Fixed made-up evidence so the hero drawing has colour before anyone signs in
 function demoEvidence() {
@@ -163,7 +163,7 @@ function registerHtml() {
     <section class="card stack">
       <div class="row between"><h2>Work style</h2><span class="pill">Self-reported</span></div>
       <p class="hint">Inspired by Big Five dimensions. It describes how you like to work and is never turned into a score.</p>
-      ${STYLE.map(([k, a, b]) => `<div class="slider"><span>${a}</span><input type="range" min="1" max="5" value="${st[k] || 3}" data-style="${k}" aria-label="${a} or ${b}"><span>${b}</span></div>`).join('')}
+      ${STYLE.map(([k, a, b]) => `<div class="slider"><span>${a}</span><input type="range" min="1" max="5" step="0.05" value="${st[k] || 3}" data-style="${k}" aria-label="${a} or ${b}"><span>${b}</span></div>`).join('')}
     </section>
     <section class="card stack" id="cogbox">${cogHtml()}</section>
   </div>`
@@ -278,7 +278,7 @@ function fingerprintHtml() {
     <section class="card stack"><h2>Experience</h2>
       ${D.experiences.length ? D.experiences.map(x => `<div class="exp"><div class="row between"><b>${esc(x.role)}${x.org ? ' · ' + esc(x.org) : ''}</b>${chip(x.source)}</div>${x.period ? `<span class="hint">${esc(x.period)}</span>` : ''}${x.contribution ? `<p>${esc(x.contribution)}</p>` : ''}</div>`).join('') : '<p class="hint">No dated experience found in the CV.</p>'}
     </section>
-    ${D.profile.work_style ? `<section class="card stack"><div class="row between"><h3>Work style</h3>${chip('self')}</div>${STYLE.map(([k, a, b]) => `<div class="slider"><span>${a}</span><input type="range" min="1" max="5" value="${D.profile.work_style[k] || 3}" disabled aria-label="${a} or ${b}"><span>${b}</span></div>`).join('')}</section>` : ''}
+    ${D.profile.work_style ? `<section class="card stack"><div class="row between"><h3>Work style</h3>${chip('self')}</div>${STYLE.map(([k, a, b]) => `<div class="slider"><span>${a}</span><input type="range" min="1" max="5" step="0.05" value="${D.profile.work_style[k] || 3}" disabled aria-label="${a} or ${b}"><span>${b}</span></div>`).join('')}</section>` : ''}
    </div></div>`
 }
 function skillRow(k, have, need, items, rating) {
@@ -318,7 +318,6 @@ function drawFingerprint(c = $('#fpc'), ev = byskill(), name = D.profile.full_na
   }
   x.globalAlpha = 1
 }
-matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => { drawFingerprint(); drawFingerprint($('#fph'), demoEvidence(), 'achievers') })
 
 // ---------- referee page (public, no account) ----------
 async function refereeView(token) {
@@ -353,6 +352,13 @@ document.addEventListener('click', async e => {
   const t = e.target.closest('[data-act]'); if (!t) return
   const a = t.dataset.act
   try {
+    if (a === 'theme') {
+      const d = document.documentElement
+      d.dataset.theme = d.dataset.theme === 'dark' ? 'light' : 'dark'
+      try { localStorage.setItem('theme', d.dataset.theme) } catch {}
+      drawFingerprint(); drawFingerprint($('#fph'), demoEvidence(), 'achievers') // canvas does not change colours by itself
+      return
+    }
     if (a === 'scroll') return document.getElementById(t.dataset.to)?.scrollIntoView({ behavior: 'smooth' })
     if (a === 'guest') { store.useGuest(); return enter() }
     if (a === 'signup' || a === 'signin') {
