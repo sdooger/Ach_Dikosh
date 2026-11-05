@@ -12,9 +12,21 @@
 <body>
   <header><div class="wrap bar">
     <a class="brand" href="#home"><i aria-hidden="true"></i>Achievers</a>
-    <nav class="steps" id="nav" hidden>
-      <a href="#register">Register</a>
-      <a href="#fingerprint">Skill Fingerprint</a>
+    <nav class="steps">
+      <span id="nav" hidden><a href="#register">Add evidence</a><a href="#fingerprint">Skill Fingerprint</a></span>
+      <div class="help">
+        <button class="navbtn" id="helpbtn" data-act="help" aria-expanded="false" aria-controls="helppanel">Help <span aria-hidden="true">▾</span></button>
+        <div class="helppanel" id="helppanel" hidden>
+          <h3>Help</h3>
+          <details name="help"><summary>How do I get my Skill Fingerprint?</summary><p>Open <b>Add evidence</b>, upload your CV (PDF, Word or text), pick a target role and press <b>Build my Skill Fingerprint</b>.</p></details>
+          <details name="help"><summary>What do levels 1 to 5 mean?</summary><p>1: the skill is mentioned. 2: you did it with ownership (led, built, organised). 3: with a measurable result. The level goes up when the skill shows up in 3 or more places, or when another kind of source, such as a colleague or a test, confirms it. 5 is the maximum.</p></details>
+          <details name="help"><summary>What do Meets, Partial and Gap mean?</summary><p><b>Meets</b>: your level reaches what the role asks for. <b>Partial</b>: some evidence, below the required level. <b>Gap</b>: no evidence yet. The triangle under the bars marks the level the role needs.</p></details>
+          <details name="help"><summary>What are the coloured labels?</summary><p>Each piece of evidence shows where it came from: your CV, what you wrote yourself, a colleague, a practice task or a test. Anyone reading your profile can tell what you claimed from what others confirmed.</p></details>
+          <details name="help"><summary>How do referee links work?</summary><p>On Add evidence, create a request for someone who worked with you and send them the link. They answer one question without making an account, and the answer appears in your fingerprint as peer feedback. Referee links need an account, not guest mode.</p></details>
+          <details name="help"><summary>Where is my data stored?</summary><p>In guest mode only in this browser. With an account it is saved to your account.</p></details>
+          <details name="help"><summary>Is there an overall score?</summary><p>No. Your fingerprint never turns into a single number.</p></details>
+        </div>
+      </div>
     </nav>
     <div class="who" id="who"></div>
   </div></header>
