@@ -292,30 +292,67 @@ function skillRow(k, have, need, items, rating) {
 function drawFingerprint(c = $('#fpc'), ev = byskill(), name = D.profile.full_name) {
   if (!c) return
   const x = c.getContext('2d'), W = c.width, css = getComputedStyle(document.documentElement)
-  const bands = taxonomy.categories.flatMap(cat => cat.subcategories).filter(s => s.skills.length).map(s => {
-    const items = s.skills.flatMap(k => ev[k.id] || [])
-    const lvl = s.skills.reduce((a, k) => a + skillLevel(ev[k.id] || []), 0) / (s.skills.length * 5)
-    const bySrc = {}; items.forEach(e => bySrc[e.source] = (bySrc[e.source] || 0) + 1)
-    const top = Object.keys(bySrc).sort((a, b) => ['peer', 'assessed'].includes(b) - ['peer', 'assessed'].includes(a) || bySrc[b] - bySrc[a])[0]
-    return { p: lvl, col: css.getPropertyValue(top ? '--s-' + top : '--line').trim() }
-  })
-  let seed = [...(name || 'achievers')].reduce((a, ch) => (a * 31 + ch.charCodeAt(0)) | 0, 7)
-  const rnd = () => { seed = (seed * 1103515245 + 12345) & 0x7fffffff; return seed / 0x7fffffff }
+  const role = ROLES[D.profile.target_role] || roles.roles[0]
+  const required = new Set(Object.keys(role.requires || {}))
+  const skills = taxonomy.categories
+    .flatMap(cat => cat.subcategories.flatMap(sub => sub.skills))
+    .filter(skill => required.has(skill.id) && skill.id.startsWith('F.'))
+  const cx = W / 2, cy = W / 2, outer = W * .425
+  const inner = Math.max(46, outer - Math.max(1, skills.length - 1) * 8.1)
+  const step = skills.length > 1 ? (outer - inner) / (skills.length - 1) : 0
+  const sourceOrder = ['assessed', 'peer', 'practice', 'contribution', 'self', 'cv']
+  const ink = css.getPropertyValue('--ink').trim()
+  const muted = css.getPropertyValue('--muted').trim()
+  const surface = css.getPropertyValue('--surface').trim()
+  const line = css.getPropertyValue('--line').trim()
+
   x.clearRect(0, 0, W, W)
-  const cx = W / 2, cy = W * .53, rings = 27
-  for (let i = 0; i < rings; i++) {
-    const b = bands[Math.floor(i / rings * bands.length)], base = 9 + i * 9.4
-    x.strokeStyle = b.col; x.globalAlpha = b.p > 0 ? .95 : .5; x.lineWidth = b.p > 0 ? 2 + b.p * 9 : 1.3; x.lineCap = 'round'
-    const gapAt = rnd() * 6.28, gapLen = .12 + rnd() * .35
-    x.beginPath(); let pen = false
-    for (let t = 0; t <= 6.29; t += .02) {
-      if (i > 3 && Math.abs((t - gapAt + 6.28) % 6.28) < gapLen) { pen = false; continue }
-      const r = base * (1 + .07 * Math.sin(2 * t + i * .2) + .05 * b.p * Math.cos(3 * t + i * .3) + .03 * Math.sin(5 * t + i))
-      const px = cx + r * Math.cos(t), py = cy + r * Math.sin(t) * (t > 3.3 && t < 6.1 ? 1.12 : .92)
-      if (!pen) { x.moveTo(px, py); pen = true } else x.lineTo(px, py)
-    }
+  skills.forEach((skill, i) => {
+    const items = ev[skill.id] || []
+    const have = skillLevel(items)
+    const target = role.requires[skill.id] || 1
+    const progress = Math.min(1, have / target)
+    const source = sourceOrder.find(s => items.some(item => item.source === s))
+    const color = source ? css.getPropertyValue('--s-' + source).trim() : line
+    const radius = outer - i * step
+
+    // The full track is the role's expected level; the coloured arc is the evidence available.
+    x.beginPath()
+    x.arc(cx, cy, radius, 0, Math.PI * 2)
+    x.strokeStyle = line
+    x.globalAlpha = .7
+    x.lineWidth = 2.2
     x.stroke()
-  }
+
+    if (progress > 0) {
+      x.beginPath()
+      x.arc(cx, cy, radius, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * progress)
+      x.strokeStyle = color || muted
+      x.globalAlpha = .95
+      x.lineWidth = 2.2 + Math.min(have, 5) * .85
+      x.lineCap = 'round'
+      x.stroke()
+    }
+  })
+
+  x.globalAlpha = 1
+  x.beginPath()
+  x.arc(cx, cy, Math.max(34, inner - 13), 0, Math.PI * 2)
+  x.fillStyle = surface
+  x.fill()
+  x.strokeStyle = line
+  x.lineWidth = 1
+  x.stroke()
+  x.textAlign = 'center'
+  x.textBaseline = 'middle'
+  x.fillStyle = ink
+  x.font = '600 17px system-ui, sans-serif'
+  x.fillText('SKILL', cx, cy - 12)
+  x.fillText('FINGERPRINT', cx, cy + 10)
+  x.fillStyle = muted
+  x.font = '11px system-ui, sans-serif'
+  const roleName = role.name.length > 23 ? role.name.slice(0, 21) + '…' : role.name
+  x.fillText(roleName, cx, cy + 31)
   x.globalAlpha = 1
 }
 
