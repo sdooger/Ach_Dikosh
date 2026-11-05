@@ -330,3 +330,11 @@ input[type=range]{accent-color:var(--accent)}
 ul.plain{margin:0;padding-left:18px;font-size:14px;display:flex;flex-direction:column;gap:4px}
 .model .chip{align-self:flex-start}
 @media (prefers-reduced-motion:reduce){.anon,.anon:hover{transition:none;transform:none}.paper{transform:none}}
+
+/* ===== Fix background squares around logos ===== */
+:root:not([data-theme="dark"]) .logo-light {
+  mix-blend-mode: multiply;
+}
+:root[data-theme="dark"] .logo-dark {
+  mix-blend-mode: screen;
+}
