@@ -1,0 +1,805 @@
+{
+ "source": "OaSIS 2025 (ESDC, Open Government Licence – Canada)",
+ "categories": [
+  {
+   "id": "F",
+   "name": "Skills",
+   "description": "Developed capabilities that an individual must have to be effective in a job, role, function, task or duty.",
+   "subcategories": [
+    {
+     "id": "F.01",
+     "name": "Foundational Skills",
+     "description": "Developed capabilities that facilitate the more rapid acquisition of other skills and knowledge.",
+     "skills": [
+      {
+       "id": "F.01.a.01",
+       "name": "Active Listening",
+       "description": "The capability to give full attention to what other people are saying, take time to understand the points being made, ask questions as appropriate and not interrupt at inappropriate times."
+      },
+      {
+       "id": "F.01.a.02",
+       "name": "Oral Comprehension",
+       "description": "The capability to listen to and understand information and ideas presented through spoken words and sentences."
+      },
+      {
+       "id": "F.01.a.03",
+       "name": "Oral Expression",
+       "description": "The capability to talk to others to convey information effectively."
+      },
+      {
+       "id": "F.01.b.01",
+       "name": "Reading Comprehension",
+       "description": "The capability to understand written information presented through words, sentences, paragraphs, symbols and images in work-related documents."
+      },
+      {
+       "id": "F.01.b.02",
+       "name": "Writing",
+       "description": "The capability to communicate in writing by using written words, sentences, paragraphs, symbols and images adapted for the needs of the audience."
+      },
+      {
+       "id": "F.01.c.01",
+       "name": "Numeracy",
+       "description": "The capability to understand, use and report numbers and other mathematical information presented through words, numbers, symbols and graphics."
+      },
+      {
+       "id": "F.01.c.02",
+       "name": "Digital Literacy",
+       "description": "The capability to understand and use digital devices and tools to obtain, exchange, create or process digital information in a secure manner."
+      }
+     ]
+    },
+    {
+     "id": "F.02",
+     "name": "Analytical Skills",
+     "description": "Developed capabilities that people need to process information and data logically to produce useable results.",
+     "skills": [
+      {
+       "id": "F.02.a.01",
+       "name": "Critical Thinking",
+       "description": "The capability to use logic and reasoning to question, discern, interpret and analyze various types of information to form an evidence-based conclusion or judgment."
+      },
+      {
+       "id": "F.02.a.02",
+       "name": "Learning and Teaching Strategies",
+       "description": "The capability to select and use training/instructional methods and procedures appropriate for the situation when learning or teaching new things."
+      },
+      {
+       "id": "F.02.a.03",
+       "name": "Decision Making",
+       "description": "The capability to assess feasible solutions or options and determine the most appropriate choice based on anticipated outcomes and alignment with objectives."
+      },
+      {
+       "id": "F.02.b.01",
+       "name": "Evaluation",
+       "description": "The capability to identify and systematically apply criteria, indicators and measurement tools at defined intervals to assess the effectiveness, value, impact or performance of products, services, processes, programs or policies."
+      },
+      {
+       "id": "F.02.b.03",
+       "name": "Systems Analysis",
+       "description": "The capability to determine how a system should work and how changes in conditions, operations and the environment will affect outcomes."
+      },
+      {
+       "id": "F.02.b.05",
+       "name": "Problem Solving",
+       "description": "The capability to analyze information related to problems to develop feasible solutions or options to eliminate or mitigate the problem."
+      }
+     ]
+    },
+    {
+     "id": "F.03",
+     "name": "Technical Skills",
+     "description": "Developed capabilities that relate to the practical or mechanical side of an activity, the application of a set of technical processes and required know-how.",
+     "skills": [
+      {
+       "id": "F.03.a.01",
+       "name": "Equipment and Tool Selection",
+       "description": "The capability to choose between two or more types of tools, equipment or machinery to perform a job."
+      },
+      {
+       "id": "F.03.a.02",
+       "name": "Preventative Maintenance",
+       "description": "The capability to perform maintenance on equipment, devices, building or machinery to keep them in functional and to prevent damage or failures."
+      },
+      {
+       "id": "F.03.a.03",
+       "name": "Setting Up",
+       "description": "The capability to set up, adjust, install and assemble equipment, machines, parts or to prepare them for their functioning and use."
+      },
+      {
+       "id": "F.03.a.04",
+       "name": "Operation and Control",
+       "description": "The capability to maneuver and control operations of equipment, machines, vehicles or systems."
+      },
+      {
+       "id": "F.03.a.05",
+       "name": "Operation Monitoring of Machinery and Equipment",
+       "description": "The capability to watch gauges, dials, digital displays or other indicators to ensure a machine or piece of equipment is working according to specifications."
+      },
+      {
+       "id": "F.03.a.06",
+       "name": "Troubleshooting",
+       "description": "The capability to determine causes of operating errors in equipment, machinery or technological systems and decide how to resolve the issues."
+      },
+      {
+       "id": "F.03.a.07",
+       "name": "Repairing",
+       "description": "The capability to replace, restore or adjust defective or deficient components in equipment, machines and technical systems and test for function, appearance, operation and safety."
+      },
+      {
+       "id": "F.03.a.08",
+       "name": "Quality Control Testing",
+       "description": "The capability to conduct tests or inspections of prototypes, products, services or processes to ensure their quality."
+      },
+      {
+       "id": "F.03.a.09",
+       "name": "Product Design",
+       "description": "The capacity to design and develop layouts for the construction of objects, equipment, machinery, structures or engineering systems (excluding software and hardware)."
+      },
+      {
+       "id": "F.03.a.10",
+       "name": "Digital Systems Production",
+       "description": "The capability to design, develop, adapt, or integrate hardware, software, applications, electronic devices or digital technologies, while ensuring compliance with cybersecurity standards and best practices."
+      }
+     ]
+    },
+    {
+     "id": "F.04",
+     "name": "Resource Management Skills",
+     "description": "Developed capabilities to plan, organize, monitor or control the resources to achieve goals.",
+     "skills": [
+      {
+       "id": "F.04.a.01",
+       "name": "Management of Financial Resources",
+       "description": "The capability to plan, organize, direct, control or monitor financial resources and activities and account for the use of theses resources to ensure their utilization are conform to the objectives and purposes."
+      },
+      {
+       "id": "F.04.a.02",
+       "name": "Management of Material Resources",
+       "description": "The capability to plan and manage the purchase, inventory, warehousing, transportation or distribution of products or materials and their use."
+      },
+      {
+       "id": "F.04.a.03",
+       "name": "Management of Personnel Resources",
+       "description": "The capability to recruit, train, motivate, develop and direct employees, identify the best person for the tasks to be performed and establish their work objectives in relation to the objectives of the organization."
+      },
+      {
+       "id": "F.04.b.05",
+       "name": "Time Management",
+       "description": "The capability to manage one's own time and the time of others."
+      },
+      {
+       "id": "F.04.c.01",
+       "name": "Monitoring",
+       "description": "The capability to regularly observe and collect data or information to track the status of projects, programs, products, policies, people conditions, equipment, events or environments to identify emerging issues, deviations or risks that require timely attention or corrective action."
+      }
+     ]
+    },
+    {
+     "id": "F.05",
+     "name": "Interpersonal Skills",
+     "description": "Developed capabilities used to work with people to achieve goals.",
+     "skills": [
+      {
+       "id": "F.05.a.01",
+       "name": "Coordinating",
+       "description": "The capability to organize people or groups by adjusting activities in relation to others' activities so that they work effectively as a whole."
+      },
+      {
+       "id": "F.05.a.02",
+       "name": "Instructing",
+       "description": "The capability to teach others knowledge or how to do something."
+      },
+      {
+       "id": "F.05.a.03",
+       "name": "Negotiating",
+       "description": "The capability to participate in or facilitate communication between parties in order to resolve differences and reach a mutually acceptable or viable agreement."
+      },
+      {
+       "id": "F.05.a.04",
+       "name": "Persuading",
+       "description": "The capability to convince others to change their minds, beliefs, intentions or behaviours."
+      },
+      {
+       "id": "F.05.a.05",
+       "name": "Social Perceptiveness",
+       "description": "The capability to be aware of others' reactions, unspoken communication, body language cues and feelings and discern the reasons behind their behaviours."
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "A",
+   "name": "Cognitive abilities",
+   "description": "Innate and developed aptitudes that facilitate the acquisition of knowledge and skills to carry out expected work.",
+   "subcategories": [
+    {
+     "id": "A.01",
+     "name": "Cognitive Abilities",
+     "description": "Abilities that influence the acquisition and application of knowledge in performing various mental processes at work.",
+     "skills": [
+      {
+       "id": "A.01.a.01",
+       "name": "Information Ordering",
+       "description": "The ability to arrange things or actions in a certain order or pattern according to a specific rule or set of rules, such as patterns of numbers, letters, words, pictures or mathematical operations."
+      },
+      {
+       "id": "A.01.a.02",
+       "name": "Categorization Flexibility",
+       "description": "The ability to generate or use different sets of rules for combining or grouping things in different ways."
+      },
+      {
+       "id": "A.01.a.03",
+       "name": "Deductive Reasoning",
+       "description": "The ability to apply general rules to produce logical answers for specific problems."
+      },
+      {
+       "id": "A.01.a.04",
+       "name": "Inductive Reasoning",
+       "description": "The ability to combine pieces of information to form general rules or conclusions, which includes finding a relationship among seemingly unrelated events."
+      },
+      {
+       "id": "A.01.a.05",
+       "name": "Fluency of Ideas",
+       "description": "The ability to come up with multiple ideas about a topic."
+      },
+      {
+       "id": "A.01.a.06",
+       "name": "Problem Identification",
+       "description": "The ability to identify an existing or potential problem. It is not about solving the problem, but only about recognizing its presence."
+      },
+      {
+       "id": "A.01.b.01",
+       "name": "Numerical Ability",
+       "description": "The ability to process arithmetical operations such as addition, subtraction, multiplication and division."
+      },
+      {
+       "id": "A.01.b.02",
+       "name": "Mathematical Reasoning",
+       "description": "The ability to choose the right mathematical methods or formulas to solve a problem."
+      },
+      {
+       "id": "A.01.c.01",
+       "name": "Memorizing",
+       "description": "The ability to remember information such as words, numbers, pictures or procedures."
+      },
+      {
+       "id": "A.01.c.02",
+       "name": "Multitasking",
+       "description": "The ability to alternate between two or more activities or sources of information, such as conversations, sounds, touch or other stimuli, during the same period."
+      },
+      {
+       "id": "A.01.c.03",
+       "name": "Pattern Identification",
+       "description": "The ability to identify or detect a known pattern such as a figure, object, word or sound that is hidden in other information or material."
+      },
+      {
+       "id": "A.01.c.04",
+       "name": "Pattern Organization Speed",
+       "description": "The ability to quickly combine and organize information into meaningful patterns."
+      },
+      {
+       "id": "A.01.c.05",
+       "name": "Perceptual Speed",
+       "description": "The ability to compare, quickly and accurately, similarities and differences among sets of letters, numbers, objects, pictures or patterns. The things to be compared may be presented at the same time, one after the other or with a remembered object."
+      },
+      {
+       "id": "A.01.d.01",
+       "name": "Spatial Orientation",
+       "description": "The ability to know your location in relation to the environment or know where objects are in relation to you."
+      },
+      {
+       "id": "A.01.d.02",
+       "name": "Spatial Visualization",
+       "description": "The ability to think visually about geometric forms, comprehend the two-dimensional representation of three-dimensional objects and recognize the relationships resulting from the movement of objects in space."
+      },
+      {
+       "id": "A.01.e.01",
+       "name": "Verbal Ability",
+       "description": "The ability to understand the meaning, precise use, associated ideas and relationships of spoken words and to use them in the proper context when presenting information or ideas."
+      },
+      {
+       "id": "A.01.e.02",
+       "name": "Written Comprehension",
+       "description": "The ability to read and understand information and ideas presented in written form."
+      },
+      {
+       "id": "A.01.e.03",
+       "name": "Written Expression",
+       "description": "The ability to communicate information and ideas in writing and adapting the writing style to the audience so that they can understand."
+      },
+      {
+       "id": "A.01.f.01",
+       "name": "Selective Attention",
+       "description": "The ability to concentrate on a task over a period of time without being distracted."
+      },
+      {
+       "id": "A.01.f.02",
+       "name": "Form Perception",
+       "description": "The ability to notice details, make visual comparisons or distinctions, and identify differences in shapes, shading, dimensions or patterns in various types of information, materials, environments or other visual contexts."
+      },
+      {
+       "id": "A.01.f.03",
+       "name": "General Learning Ability",
+       "description": "The ability to grasp, understand and assimilate new information and instructions and their underlying principles, and to filter them through reasoning and judgment."
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "B",
+   "name": "Personal Attributes",
+   "description": "Personal characteristics that are innate and developed through the social context and personal experiences to which the individual is exposed. These qualities influence the way one is and does things and are considered valuable assets for work performance.",
+   "subcategories": [
+    {
+     "id": "B.01",
+     "name": "Social Traits",
+     "description": "The personal characteristics related to the positive attitudes one has toward other people that most often lead to positive relationships.",
+     "skills": [
+      {
+       "id": "B.01.a.01",
+       "name": "Leadership",
+       "description": "The quality of leading others towards a common goal by guiding, influencing and inspiring them."
+      },
+      {
+       "id": "B.01.b.01",
+       "name": "Concern for Others",
+       "description": "The quality of having empathy towards others' feelings and needs and being understanding and helpful."
+      },
+      {
+       "id": "B.01.b.02",
+       "name": "Collaboration",
+       "description": "The quality of contributing and working cooperatively while being supportive and inclusive of others to achieve a common goal."
+      },
+      {
+       "id": "B.01.b.03",
+       "name": "Service Orientation",
+       "description": "The quality of actively looking for ways to help, serve or assist others."
+      },
+      {
+       "id": "B.01.b.05",
+       "name": "Social Orientation",
+       "description": "The quality of seeking to work with others and relating to them on the job."
+      }
+     ]
+    },
+    {
+     "id": "B.02",
+     "name": "Self-Improvement",
+     "description": "The personal characteristics related to the improvement of one's knowledge, status or character by one's own efforts.",
+     "skills": [
+      {
+       "id": "B.02.a.01",
+       "name": "Adaptability",
+       "description": "The quality of adapting oneself to expected or unexpected changes and different situations while continuing to achieve past or renewed goals."
+      },
+      {
+       "id": "B.02.a.03",
+       "name": "Stress Tolerance",
+       "description": "The quality of being able to remain calm, without being carried away by stress situations and to deal effectively with such situations."
+      },
+      {
+       "id": "B.02.c.01",
+       "name": "Active Learning",
+       "description": "The quality of proactively looking to understand the implications of new information in the current and changing workplace."
+      }
+     ]
+    },
+    {
+     "id": "B.03",
+     "name": "Results-Based Attributes",
+     "description": "The personal characteristics related to the drivers around bringing things to completion.",
+     "skills": [
+      {
+       "id": "B.03.a.07",
+       "name": "Independence",
+       "description": "The quality of developing one's own way of doing things, guiding oneself with little or no supervision and depending on oneself to get things done."
+      }
+     ]
+    },
+    {
+     "id": "B.04",
+     "name": "Professional Conscientiousness",
+     "description": "The personal characteristics related to the drivers around fulfilling commitments.",
+     "skills": []
+    },
+    {
+     "id": "B.05",
+     "name": "Dynamic Thinking",
+     "description": "The personal characteristics related to bubbling ideas and critical thinking.",
+     "skills": [
+      {
+       "id": "B.05.a.02",
+       "name": "Analytical Thinking",
+       "description": "The quality of analyzing information and using logic to address issues and problems."
+      },
+      {
+       "id": "B.05.a.03",
+       "name": "Attention to Detail",
+       "description": "The quality of being meticulous in the execution of tasks."
+      },
+      {
+       "id": "B.05.b.01",
+       "name": "Creativity",
+       "description": "The quality of coming up with unusual or clever ideas about a given topic or situation, or to develop original ways to solve a problem."
+      },
+      {
+       "id": "B.05.b.02",
+       "name": "Innovativeness",
+       "description": "The quality of alternative thinking to develop new products or services to make improvement or to develop a new approach."
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "G",
+   "name": "Knowledge",
+   "description": "Organized sets of principles and practices used for the execution of tasks and activities within a particular domain.",
+   "subcategories": [
+    {
+     "id": "G.01",
+     "name": "Administration and Management",
+     "description": "Organized set of principles and practices relating to administration and management domains.",
+     "skills": [
+      {
+       "id": "G.01.a.01",
+       "name": "Accounting",
+       "description": "Knowledge of concepts, principles, methods and practices for budgeting, storing, tracking, controlling, analyzing and reporting on financial transactions."
+      },
+      {
+       "id": "G.01.a.02",
+       "name": "Business Management",
+       "description": "Knowledge of concepts, principles and practices of managing business operations such as strategic planning, resource allocation, production management and coordination of people and activities."
+      },
+      {
+       "id": "G.01.a.03",
+       "name": "Clerical",
+       "description": "Knowledge of administrative concepts, principles, methods, procedures and practices for the functioning of the daily office operations."
+      },
+      {
+       "id": "G.01.a.04",
+       "name": "Finance",
+       "description": "Knowledge of concepts, principles, methods and practices related to financial operations, systems and institutions."
+      },
+      {
+       "id": "G.01.a.05",
+       "name": "Human Resources and Labour Relations",
+       "description": "Knowledge of concepts, principles, procedures and practices for personnel recruitment, selection, hiring, training policies, deploying, compensation and benefits, labour relations and negotiation and personnel information systems."
+      },
+      {
+       "id": "G.01.a.06",
+       "name": "Sales and Marketing",
+       "description": "Knowledge of concepts, principles, techniques, practices and tools for determining consumer behaviour and needs, developing business opportunities and promoting and selling products and services."
+      },
+      {
+       "id": "G.01.a.07",
+       "name": "Client Service",
+       "description": "Knowledge of concepts, principles and practices of providing services and support to satisfy clients' requirements and needs."
+      }
+     ]
+    },
+    {
+     "id": "G.02",
+     "name": "Communication",
+     "description": "Organized set of principles and practices relating to communication domains.",
+     "skills": [
+      {
+       "id": "G.02.a.01",
+       "name": "Communications and Media",
+       "description": "Knowledge of concepts, principles, methods and techniques for the creation, production, distribution or dissemination of written, oral, audiovisual or visual communications to a targeted audience."
+      }
+     ]
+    },
+    {
+     "id": "G.03",
+     "name": "Education",
+     "description": "Organized set of principles and practices relating to education domains.",
+     "skills": [
+      {
+       "id": "G.03.a.01",
+       "name": "Teaching",
+       "description": "Knowledge of the concepts, principles, methods and practices of instructing individuals and groups, designing educational curriculum and measuring learning outcome."
+      },
+      {
+       "id": "G.03.a.02",
+       "name": "Training, Mentoring and Coaching",
+       "description": "Knowledge of concepts and principles of learning and readiness to learn, and of methods for guiding, advising, directing and supporting career or personal goals for the individuals or groups to gain experience and improve competencies."
+      }
+     ]
+    },
+    {
+     "id": "G.04",
+     "name": "Health and Wellbeing",
+     "description": "Organized set of principles and practices relating to health and wellbeing domains.",
+     "skills": [
+      {
+       "id": "G.04.a.01",
+       "name": "Hospitality",
+       "description": "Knowledge of concepts, principles, techniques and tools or equipment for managing facilities and providing food, accommodation or tourism services with the focus on client experience."
+      },
+      {
+       "id": "G.04.a.02",
+       "name": "Mental Health",
+       "description": "Knowledge of concepts, principles, methods and procedures for assessment, diagnosis, treatment, rehabilitation, counseling or guidance to address neurological and cognitive processes, behaviours and disorders or to maintain balanced mental health and well-being."
+      },
+      {
+       "id": "G.04.a.03",
+       "name": "Personal Services",
+       "description": "Knowledge of concepts, principles, techniques and tools for providing services of personal nature related to body care, childcare and other in-home services."
+      },
+      {
+       "id": "G.04.a.04",
+       "name": "Physical Health",
+       "description": "Knowledge of concepts and principles of the human anatomy, organic systems, biomedical sciences, genetics, and of procedures, techniques and tools needed to diagnose and treat injuries and diseases, to restore and maintain physical health by the prevention and treatment."
+      },
+      {
+       "id": "G.04.a.05",
+       "name": "Recreation, Leisure and Fitness",
+       "description": "Knowledge of concepts, principles, practices, and equipment for physical fitness and for managing and providing recreational, leisure and fitness program or services."
+      },
+      {
+       "id": "G.04.a.06",
+       "name": "Veterinarian and Animal Care",
+       "description": "Knowledge of concepts, principles, practices, techniques and tools for the prevention, care, diagnostics, and treatment of diseases, disorders and injuries, and the maintenance of wellbeing of animals."
+      }
+     ]
+    },
+    {
+     "id": "G.05",
+     "name": "Law, Government and Safety",
+     "description": "Organized set of principles and practices relating to law, government and safety.",
+     "skills": [
+      {
+       "id": "G.05.a.02",
+       "name": "Law",
+       "description": "Knowledge of concepts, principles, operations and processes of the municipal, provincial-territorial, federal or international legal systems for the establishment, implementation and application of laws, legal codes and documents and court procedures."
+      },
+      {
+       "id": "G.05.a.03",
+       "name": "Public Affairs and Government Relations",
+       "description": "Knowledge of concepts, principles, processes and functioning of governments and political systems for the establishment and implementation of policies, regulations and legislations."
+      },
+      {
+       "id": "G.05.a.04",
+       "name": "Public Safety and Security",
+       "description": "Knowledge of concepts, principles, regulations, procedures and practices related to public safety and security operations and systems for the protection of people, data, goods, properties and infrastructure."
+      }
+     ]
+    },
+    {
+     "id": "G.06",
+     "name": "Logistics, Design and Evaluation",
+     "description": "Organized set of principles and practices relating to logistics, design and evaluation domains.",
+     "skills": [
+      {
+       "id": "G.06.a.01",
+       "name": "Manufacturing, Processing and Production",
+       "description": "Knowledge of concepts, principles, methods and techniques of production and transformation, including manual and mechanical processes."
+      },
+      {
+       "id": "G.06.a.02",
+       "name": "Logistics",
+       "description": "Knowledge of concepts, principles, infrastructures and processes for planning, organizing and coordinating activities to ensure efficient management of resources and services as well as optimal movement of people, animals and goods."
+      },
+      {
+       "id": "G.06.a.03",
+       "name": "Performance Measurement",
+       "description": "Knowledge of concepts, principles, methods, practices and strategies of monitoring the development, delivery and quality of products, programs or services."
+      },
+      {
+       "id": "G.06.a.04",
+       "name": "Technical Design",
+       "description": "Knowledge of technical design concepts, principles, methods, techniques and tools involved in the creation and production of technical plans, blueprints, drawings or models."
+      }
+     ]
+    },
+    {
+     "id": "G.07",
+     "name": "Natural Resources",
+     "description": "Organized set of principles and practices relating to natural resources domains.",
+     "skills": [
+      {
+       "id": "G.07.a.01",
+       "name": "Agronomy and horticulture",
+       "description": "Knowledge of concepts, principles, techniques, materials and equipment for planting, growing, harvesting, storing or preserving plants and plant products."
+      },
+      {
+       "id": "G.07.a.02",
+       "name": "Forestry",
+       "description": "Knowledge of concepts, principles, techniques, materials and equipment for sourcing, processing, managing, monitoring, preserving and conserving forest resources."
+      },
+      {
+       "id": "G.07.a.03",
+       "name": "Geological Resources",
+       "description": "Knowledge of concepts, principles, techniques, materials and equipment for sourcing, processing, managing, monitoring, conserving or preserving natural resources such as minerals, metals, oil, natural gas, coal and other geological materials."
+      },
+      {
+       "id": "G.07.a.04",
+       "name": "Livestock, Farm Animals and Wildlife",
+       "description": "Knowledge of the concepts, principles, techniques, materials and equipment used in sourcing, raising, fishing, hunting, managing or monitoring livestock, farm animals and wildlife to support sustainable animal resource and ensure the preservation of biodiversity."
+      },
+      {
+       "id": "G.07.a.05",
+       "name": "Water Resources",
+       "description": "Knowledge of concepts, principles, techniques, materials and equipment for sourcing, processing, managing, monitoring or preserving water resources such as rivers, lakes, oceans and underground aquifers."
+      }
+     ]
+    },
+    {
+     "id": "G.08",
+     "name": "Physical Sciences",
+     "description": "Organized set of principles and practices relating to physical sciences domains.",
+     "skills": [
+      {
+       "id": "G.08.a.01",
+       "name": "Biology",
+       "description": "Knowledge of concepts and principles of living organisms including their structure, function, growth, origin, evolution, distribution and classification and their interdependencies and interactions with each other and the environment, as well as safe and ethical handling methods and techniques."
+      },
+      {
+       "id": "G.08.a.02",
+       "name": "Chemistry",
+       "description": "Knowledge of the composition, structure and properties of chemical substances including their interactions, transformations and use, as well as the production techniques, risk factors and disposal methods."
+      },
+      {
+       "id": "G.08.a.03",
+       "name": "Geoscience",
+       "description": "Knowledge of concepts, principles and methods for analyzing the Earth's materials, structures and natural systems to understand their composition, the processes and their evolution over time, as well as interactions between the land, oceans and atmosphere."
+      },
+      {
+       "id": "G.08.a.05",
+       "name": "Physics",
+       "description": "Knowledge of concepts, principles, fundamental properties and laws that govern space, time, energy and matter and of equipment and methods required to study and apply the interactions of objects including atoms, particles and celestial bodies."
+      }
+     ]
+    },
+    {
+     "id": "G.09",
+     "name": "Socioeconomic Systems",
+     "description": "Organized set of principles and practices relating to socioeconomics domains.",
+     "skills": [
+      {
+       "id": "G.09.a.01",
+       "name": "Arts",
+       "description": "Knowledge of concepts, principles and techniques of artistic expression required to create, compose or produce visual, applied, performing or literary art."
+      },
+      {
+       "id": "G.09.a.02",
+       "name": "Economics",
+       "description": "Knowledge of concepts and principles of the production, distribution and consumption of goods and services and the methods of analysis including simulation and forecasting techniques."
+      },
+      {
+       "id": "G.09.a.03",
+       "name": "Humanities",
+       "description": "Knowledge of concepts, principles and methods for understanding human social interaction and structures, and events throughout time and their effects on civilizations, cultures and environment."
+      },
+      {
+       "id": "G.09.a.04",
+       "name": "Library, Conservation and Heritage",
+       "description": "Knowledge of concepts, principles, techniques and tools in the classification, storage, retrieval, display and management of documentation and records in various media, museum artifacts or works of fine art."
+      },
+      {
+       "id": "G.09.a.05",
+       "name": "Theology and Philosophy",
+       "description": "Knowledge of concepts and principles of religious and philosophical systems, and of fundamental questioning of existence, reason, values, ethics, ways of thinking, customs, practices and their impact on individuals, human culture and society."
+      }
+     ]
+    },
+    {
+     "id": "G.10",
+     "name": "Technology, Electrical, Material and Mechanical",
+     "description": "Organized set of principles and practices relating to technology, electrical, material and mechanical.",
+     "skills": [
+      {
+       "id": "G.10.a.01",
+       "name": "Building and Construction",
+       "description": "Knowledge of concepts, principles, methods, materials and tools involved in the construction, maintenance and repair of houses, buildings or infrastructures such as highways and roads."
+      },
+      {
+       "id": "G.10.a.02",
+       "name": "Computer, Technology and Information Systems",
+       "description": "Knowledge of concepts, principles, processes, techniques and tools for technological and digital systems, devices and products, such as hardware or software development, assembling, programming, use, troubleshooting or maintenance."
+      },
+      {
+       "id": "G.10.a.03",
+       "name": "Electrical and Electronics",
+       "description": "Knowledge of concepts, principles, techniques and tools applied for the development, use, repair and maintenance of electronic and electrical products and devices."
+      },
+      {
+       "id": "G.10.a.04",
+       "name": "Mechanics and Machinery",
+       "description": "Knowledge of parts, standards and functioning of machines, vehicles, equipment or tools and techniques used for their repair or maintenance."
+      },
+      {
+       "id": "G.10.a.05",
+       "name": "Telecommunications",
+       "description": "Knowledge of concepts, principles, processes, techniques and tools of the transmission of information via wire, radio, optical fiber or other electromagnetic system for the use, repair, maintenance, control or operation of telecommunications systems."
+      },
+      {
+       "id": "G.10.a.06",
+       "name": "Vehicle, Machinery and Equipment Operation",
+       "description": "Knowledge of the parts and functioning of vehicles, machinery or equipment and of techniques and practices for their safe and efficient use."
+      }
+     ]
+    },
+    {
+     "id": "G.11",
+     "name": "Foundational Knowledge",
+     "description": "Organized set of principles and practices that are fundamental to the acquisition of new knowledge.",
+     "skills": [
+      {
+       "id": "G.11.a.01",
+       "name": "Languages",
+       "description": "Knowledge of vocabulary, grammar structure and rules, spelling and pronunciation of words in one or both official languages, Indigenous languages and non-official languages."
+      },
+      {
+       "id": "G.11.a.02",
+       "name": "Mathematics",
+       "description": "Knowledge of concepts, principles, methods and applications of arithmetic, algebra, geometry, trigonometry, differential and integral calculus, probability and statistics."
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "T",
+   "name": "Tools and technologies",
+   "description": "Software tools named in the CV. Not part of OaSIS.",
+   "subcategories": [
+    {
+     "id": "T.01",
+     "name": "Data and analytics tools",
+     "skills": [
+      {
+       "id": "tool-excel",
+       "name": "Microsoft Excel",
+       "description": "Spreadsheets, formulas, pivot tables."
+      },
+      {
+       "id": "tool-sql",
+       "name": "SQL",
+       "description": "Querying relational databases."
+      },
+      {
+       "id": "tool-python",
+       "name": "Python",
+       "description": "General-purpose programming and data analysis."
+      },
+      {
+       "id": "tool-r",
+       "name": "R",
+       "description": "Statistical programming."
+      },
+      {
+       "id": "tool-bi",
+       "name": "BI tools (Tableau, Power BI)",
+       "description": "Dashboards and visual analytics."
+      }
+     ]
+    },
+    {
+     "id": "T.02",
+     "name": "Productivity and design tools",
+     "skills": [
+      {
+       "id": "tool-powerpoint",
+       "name": "PowerPoint / slides",
+       "description": "Building presentations."
+      },
+      {
+       "id": "tool-figma",
+       "name": "Figma / design tools",
+       "description": "Interface and visual design."
+      },
+      {
+       "id": "tool-pm",
+       "name": "Project tools (Jira, Asana, Notion)",
+       "description": "Planning and tracking work."
+      }
+     ]
+    }
+   ]
+  }
+ ]
+}
